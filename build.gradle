@@ -1,0 +1,120 @@
+buildscript {
+    repositories {
+        // NOTE: You should declare only repositories that you need here
+        mavenLocal()
+        mavenCentral()
+        maven { url "http://172.16.100.98/nexus/content/groups/public/"}
+        maven { url "http://repo.spring.io/release" }
+        maven { url "http://repo.spring.io/milestone" }
+        maven { url "http://repo.spring.io/snapshot" }
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:1.3.6.RELEASE")
+        classpath "org.springframework:springloaded:1.2.3.RELEASE"
+    }
+}
+
+allprojects{
+    group "com.ymatou.mq"
+    version "1.0.0"
+
+    apply plugin: "java"
+    apply plugin: "idea"
+//    apply plugin: "spring-boot"
+    apply plugin: "maven"
+    apply plugin: "eclipse-wtp"
+
+    compileJava {
+        sourceCompatibility = 1.8
+        targetCompatibility = 1.8
+        options.encoding = 'UTF-8'
+    }
+
+    compileTestJava {
+        sourceCompatibility = 1.8
+        targetCompatibility = 1.8
+        options.encoding = 'UTF-8'
+    }
+
+    ext {
+        springDataMongoVersion = "1.9.2.RELEASE"
+        logbackVersion = "1.1.7"
+        slf4jVersion = "1.7.21"
+        springVersion = "4.2.5.RELEASE"
+        mybatisVersion = "3.4.1"
+        mybatisSpringVersion = "1.3.0"
+        junitVersion = "4.12"
+        jmockitVersion = "1.22"
+        tomcatEmbedVersion = "8.0.33"
+        jsoupVersion = "1.9.2"
+        jasperVersion = "6.0.45"
+        druidVersion = "1.0.18"
+        jtdsVersion = "1.3.1"
+
+        httpclientVersion = "4.5.2"
+        httpcoreVersion = "4.4.4"
+
+        resteasyJaxrsVersion = "3.0.16.Final"
+        jacksonVersion = "2.7.4"
+
+        validationApiVersion = "1.1.0.Final"
+        hibernateValidatorVersion = "5.2.4.Final"
+
+        kryoVersion = "3.0.3"
+        kryoSerializersVersion = "0.37"
+
+        dubboxVersion = "2.8.4"
+        zookeeperVersion = "3.4.8"
+
+        zkclientVersion = "0.1"
+        commonsLang3Version = "3.4"
+        disconfVersion = "2.6.39"
+        commonsIoVersion = "2.4"
+
+        mongoDriverVerson = "3.2.2"
+
+        jodaTimeVerson = "2.9.3"
+
+        elApiVersion = "2.2"
+        errorreporterVersion = "1.0.9"
+        performanceMonitorClientVersion = "1.1.5"
+        messagebusVersion = "1.0.3"
+
+        junitToolboxVersion = "2.2"
+
+        fastjsonVersion = "1.2.12"
+        guavaVersion = "19.0"
+
+        //!-- self version --
+        userqueryVersion = "1.0.0"
+
+//        !--对外暴露的API，需发布到maven私服，供客户端引用。版本会不断升级。 --
+//        !--开发联调，API还未稳定，需要频繁发布时，版本号变更为1.0.0.SNAPSHOT。 --
+//        !--API最终确定后，版本号修改为“1.0.0YyyyMmDd”并release。客户端最终必须都是使用release版 --
+        mqRabbitDispatcherFacadeVersion = "1.0.0.20161209"
+    }
+
+    repositories {
+        mavenLocal()
+        maven { url "http://172.16.100.98/nexus/content/groups/public/"}
+//        maven { url "http://repo.spring.io/release" }
+//        maven { url "http://repo.spring.io/milestone" }
+//        maven { url "http://repo.spring.io/snapshot" }
+        maven { url "http://repository.jboss.org/nexus/content/groups/public/" }
+        mavenCentral()
+    }
+}
+
+subprojects{
+
+    configurations {
+
+        compile.exclude group: "org.eclipse.jetty.websocket"
+        compile.exclude module:"c3p0"
+    }
+}
+
+
+task wrapper(type: Wrapper) {
+    gradleVersion = "2.4"
+}

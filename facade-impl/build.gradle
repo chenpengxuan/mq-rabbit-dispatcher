@@ -1,0 +1,21 @@
+description = "消息总线分发站API实现"
+
+jar {
+	baseName = 'mq-rabbit-dispatcher-facade-impl'
+	version = "${mqRabbitDispatcherFacadeVersion}"
+}
+
+
+dependencies {
+	
+	compile(project(":mq-rabbit-common"))
+	compile(project(":mq-infrastructure"))
+	compile(project(":facade-interface"))
+
+	compile "com.alibaba:dubbo:${dubboxVersion}"
+
+	compile "com.ymatou.resteasy:resteasy-jaxrs:${resteasyJaxrsVersion}"
+	compile "com.ymatou.resteasy:resteasy-client:${resteasyJaxrsVersion}"
+}
+
+

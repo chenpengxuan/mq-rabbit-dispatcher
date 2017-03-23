@@ -1,0 +1,49 @@
+description = "this is a web jar"
+
+apply plugin: 'application'
+
+mainClassName = "com.ymatou.userquery.starter.Application"
+
+jar {
+    baseName = 'mq-rabbit-dispatcher-web'
+
+    exclude('logback-test.xml')
+    exclude { it.name.endsWith('.properties'); }
+}
+
+
+dependencies {
+    compile(project(":facade-impl"))
+    compile "org.apache.tomcat.embed:tomcat-embed-core:${tomcatEmbedVersion}"
+    compile "org.apache.tomcat.embed:tomcat-embed-logging-juli:${tomcatEmbedVersion}"
+}
+
+//复制启动，停止脚本
+task copyScript(type: Copy) {
+    into "$buildDir/dist"
+    from "$projectDir/script"
+}
+
+//复制jar
+task copyJars(type: Copy, dependsOn: jar) {
+    from configurations.runtime  //项目所有的jar依赖
+    from "$buildDir/libs"        //本项目jar
+    into "$buildDir/dist/lib"
+}
+
+//复制配置
+task copyConfig(type: Copy) {
+    from "$projectDir/src/main/resources/disconf.properties"
+    into "$buildDir/dist/conf"
+}
+
+task copyMeta(type: Copy) {
+    from "$projectDir/src/main/resources/META-INF"
+    into "$buildDir/dist/conf/META-INF"
+}
+
+//打包发布 发布为：gradle release 默认位置为：build/distributions
+task release(type: Zip, dependsOn: [copyScript, copyJars, copyConfig, copyMeta]) {
+    archiveName = "mq-rabbit-receiver-web.zip"
+    from "$buildDir/dist"
+}

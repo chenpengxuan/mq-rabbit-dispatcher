@@ -1,0 +1,6 @@
+rootProject.name = 'mq-rabbit-dispatcher'
+
+include 'facade-interface','facade-impl','web','test'
+
+includeFlat 'mq-rabbit-common' ,'mq-infrastructure'
+

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+	<property name="pattern"
+		value="%date [%thread] %-5level %logger{40} KEY[%X{logPrefix}] - %msg%n" />
+	<property name="level" value="debug" />
+	<property name="charset" value="UTF-8" />
+
+	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+		<encoder>
+			<charset>${charset}</charset>
+			<pattern>${pattern}</pattern>
+		</encoder>
+	</appender>
+
+	<!-- 异常监控 -->
+	<appender name="HTTP-POST-ERROR-APPENDER"
+		class="com.ymatou.errorreporter.logbackappender.HttpPostErrorAppender">
+		<!-- http post target url -->
+		<param name="targetUrl" value="http://alarm.ymatou.com/Alarm/SaveSingle" />
+		<!-- your application id -->
+		<param name="appId" value="userquery.trading.iapi.ymatou.com" />
+	</appender>
+
+	<logger name="org.springframework">
+		<level value="${level}" />
+		<appender-ref ref="HTTP-POST-ERROR-APPENDER" />
+	</logger>
+
+	<logger name="com.ibatis">
+		<level value="${level}" />
+		<appender-ref ref="HTTP-POST-ERROR-APPENDER" />
+	</logger>
+
+	<logger name="java.util.sql">
+		<level value="${level}" />
+		<appender-ref ref="HTTP-POST-ERROR-APPENDER" />
+	</logger>
+	-
+
+	<logger name="com.ymatou.tradeservice">
+		<level value="${level}" />
+		<appender-ref ref="HTTP-POST-ERROR-APPENDER" />
+	</logger>
+
+	<root level="${level}">
+		<appender-ref ref="STDOUT" />
+		<appender-ref ref="HTTP-POST-ERROR-APPENDER" />
+	</root>
+</configuration>

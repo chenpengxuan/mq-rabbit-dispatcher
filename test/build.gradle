@@ -1,0 +1,13 @@
+description = "this is a test"
+
+dependencies {
+
+    compile(project(":facade-impl"))
+
+    compile "org.jmockit:jmockit:${jmockitVersion}"
+    compile "junit:junit:${junitVersion}"
+    compile "org.springframework:spring-test:${springVersion}"
+    compile "com.googlecode.junit-toolbox:junit-toolbox:${junitToolboxVersion}"
+}
+
+

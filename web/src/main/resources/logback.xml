@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  ~ /*
+  ~  (C) Copyright 2016 Ymatou (http://www.ymatou.com/).
+  ~  All rights reserved.
+  ~  */
+  -->
+
+<configuration>
+    <property name="pattern"
+              value="%date [%thread] %-5level %logger{40} KEY[%X{logPrefix}] - %msg%n"/>
+    <property name="appId" value="userquery.trading.iapi.ymatou.com"/>
+    <property name="basePackage" value="com.ymatou.userquery"/>
+    <property name="baseDir" value="/usr/local/log/${appId}"/>
+
+    <property name="level" value="info"/>
+    <property name="charset" value="UTF-8"/>
+    <property name="immediateFlush" value="true"/>
+    <property name="queueSize" value="1024"/>
+
+
+    <appender name="HTTP-POST-ERROR-APPENDER"
+              class="com.ymatou.errorreporter.logbackappender.HttpPostErrorAppender">
+        <!-- http post target url -->
+        <param name="targetUrl" value="http://alarm.ymatou.com/Alarm/SaveSingle"/>
+
+        <!-- your application id -->
+        <param name="appId" value="${appId}"/>
+    </appender>
+
+    <appender name="ERROR-APPENDER"
+              class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>ERROR</level>
+        </filter>
+        <file>${baseDir}/error.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${baseDir}/error.%d{yyyy-MM-dd}
+            </fileNamePattern>
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <charset>${charset}</charset>
+            <pattern>${pattern}</pattern>
+            <immediateFlush>${immediateFlush}</immediateFlush>
+        </encoder>
+    </appender>
+
+    <appender name="ASYNC-ERROR-APPENDER" class="ch.qos.logback.classic.AsyncAppender">
+        <queueSize>${queueSize}</queueSize>
+        <appender-ref ref="ERROR-APPENDER"/>
+    </appender>
+
+    <appender name="DEFAULT-APPENDER"
+              class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${baseDir}/default.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${baseDir}/default.%d{yyyy-MM-dd}
+            </fileNamePattern>
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <charset>${charset}</charset>
+            <pattern>${pattern}</pattern>
+            <immediateFlush>${immediateFlush}</immediateFlush>
+        </encoder>
+    </appender>
+
+    <appender name="ASYNC-DEFAULT-APPENDER" class="ch.qos.logback.classic.AsyncAppender">
+        <queueSize>${queueSize}</queueSize>
+        <appender-ref ref="DEFAULT-APPENDER"/>
+    </appender>
+
+    <appender name="BIZ-APPENDER"
+              class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${baseDir}/biz.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${baseDir}/biz.%d{yyyy-MM-dd}
+            </fileNamePattern>
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <charset>${charset}</charset>
+            <pattern>${pattern}</pattern>
+            <immediateFlush>${immediateFlush}</immediateFlush>
+        </encoder>
+    </appender>
+
+    <appender name="ASYNC-BIZ-APPENDER" class="ch.qos.logback.classic.AsyncAppender">
+        <queueSize>${queueSize}</queueSize>
+        <appender-ref ref="BIZ-APPENDER"/>
+    </appender>
+
+
+    <appender name="FACADE-APPENDER"
+              class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${baseDir}/facade.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${baseDir}/facade.%d{yyyy-MM-dd}</fileNamePattern>
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <charset>${charset}</charset>
+            <pattern>${pattern}</pattern>
+            <immediateFlush>${immediateFlush}</immediateFlush>
+        </encoder>
+    </appender>
+
+    <appender name="ASYNC-FACADE-APPENDER" class="ch.qos.logback.classic.AsyncAppender">
+        <queueSize>${queueSize}</queueSize>
+        <appender-ref ref="FACADE-APPENDER"/>
+    </appender>
+
+
+    <!-- facade -->
+    <logger name="${basePackage}.facade" additivity="false">
+        <level value="${level}"/>
+        <appender-ref ref="ASYNC-FACADE-APPENDER"/>
+        <appender-ref ref="ASYNC-ERROR-APPENDER"/>
+        <appender-ref ref="HTTP-POST-ERROR-APPENDER"/>
+    </logger>
+
+    <!-- biz -->
+    <logger name="${basePackage}" additivity="false">
+        <level value="${level}"/>
+        <appender-ref ref="ASYNC-BIZ-APPENDER"/>
+        <appender-ref ref="ASYNC-ERROR-APPENDER"/>
+        <appender-ref ref="HTTP-POST-ERROR-APPENDER"/>
+    </logger>
+
+
+    <!-- default -->
+    <root level="${level}">
+        <appender-ref ref="ASYNC-DEFAULT-APPENDER"/>
+        <appender-ref ref="ASYNC-ERROR-APPENDER"/>
+        <appender-ref ref="HTTP-POST-ERROR-APPENDER"/>
+    </root>
+</configuration>

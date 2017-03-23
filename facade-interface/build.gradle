@@ -1,0 +1,30 @@
+description = "消息总线分发站API接口"
+
+jar {
+	baseName = 'mq-rabbit-dispatcher-facade'
+	version = "${mqRabbitDispatcherFacadeVersion}"
+}
+
+
+dependencies {
+	
+	compile "org.apache.commons:commons-lang3:${commonsLang3Version}"
+	compile "org.hibernate:hibernate-validator:${hibernateValidatorVersion}"
+	compile "javax.el:el-api:${elApiVersion}"
+	compile "com.alibaba:fastjson:${fastjsonVersion}"
+
+	compile "com.google.guava:guava:${guavaVersion}"
+
+	compile("com.ymatou.resteasy:resteasy-jackson2-provider:${resteasyJaxrsVersion}"){
+		exclude group: 'com.fasterxml.jackson.core', module: 'jackson-core'
+		exclude group: 'com.fasterxml.jackson.core', module: 'jackson-databind'
+		exclude group: 'com.fasterxml.jackson.core', module: 'jackson-annotations'
+	}
+	compile "com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:${jacksonVersion}"
+
+	compile "joda-time:joda-time:${jodaTimeVerson}"
+
+	compile "com.ymatou.resteasy:resteasy-jaxrs:${resteasyJaxrsVersion}"
+}
+
+
