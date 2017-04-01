@@ -47,7 +47,7 @@
     <dubbo:protocol name="dubbo" port="${dubbo.port}" />
 
     <dubbo:protocol name="rest" server="tomcat" port="${server.port}"
-                    extension="com.ymatou.mq.rabbit.dispatcher.infrastructure.JacksonConfig"/>
+                    extension="com.ymatou.mq.rabbit.dispatcher.util.JacksonConfig"/>
 
 
 </beans>

@@ -9,7 +9,7 @@ package com.ymatou.mq.rabbit.dispatcher.config;
 
 import com.baidu.disconf.client.DisconfMgrBean;
 import com.baidu.disconf.client.DisconfMgrBeanSecond;
-import com.ymatou.mq.rabbit.dispatcher.constants.Constants;
+import com.ymatou.mq.rabbit.dispatcher.util.Constants;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
