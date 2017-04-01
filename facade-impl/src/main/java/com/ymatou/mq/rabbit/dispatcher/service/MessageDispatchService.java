@@ -4,6 +4,7 @@ import com.ymatou.mq.infrastructure.model.AppConfig;
 import com.ymatou.mq.infrastructure.model.Message;
 import com.ymatou.mq.infrastructure.model.QueueConfig;
 import com.ymatou.mq.infrastructure.service.MessageConfigService;
+import com.ymatou.mq.infrastructure.support.ConfigReloadListener;
 import com.ymatou.mq.rabbit.config.RabbitConfig;
 import com.ymatou.mq.rabbit.dispatcher.config.DispatchConfig;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,8 +32,19 @@ public class MessageDispatchService {
     @Autowired
     private DispatchCallbackService dispatchCallbackService;
 
+    /**
+     * 初始化消费监听
+     */
     @PostConstruct
     public void initConsumer(){
+        //TODO 添加配置变化监听
+        messageConfigService.addConfigCacheListener(new ConfigReloadListener(){
+            @Override
+            public void callback() {
+
+            }
+        });
+        //启动消费监听
         List<AppConfig> appConfigList = messageConfigService.getAllAppConfig();
         for(AppConfig appConfig:appConfigList){
             String dispatchGroup = appConfig.getDispatchGroup();

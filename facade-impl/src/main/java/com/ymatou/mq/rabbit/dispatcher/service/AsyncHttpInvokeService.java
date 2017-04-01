@@ -22,18 +22,27 @@ public class AsyncHttpInvokeService implements FutureCallback<HttpResponse> {
 
     private DispatchCallbackService dispatchCallbackService;
 
-    public AsyncHttpInvokeService(){
-
+    public AsyncHttpInvokeService(Message message,CallbackConfig callbackConfig){
+        this.message = message;
+        this.callbackConfig = callbackConfig;
     }
 
+    /**
+     * async send
+     */
     public void send(){
         //TODO
     }
 
+    /**
+     * async send
+     * @param timeout
+     */
     public void send(Long timeout){
         StringEntity postEntity = new StringEntity(message.getBody(), "UTF-8");
         HttpPost httpPost = new HttpPost(callbackConfig.getUrl());
         httpPost.setEntity(postEntity);
+        //TODO 异常处理
         httpAsyncClient.execute(httpPost,this);
     }
 

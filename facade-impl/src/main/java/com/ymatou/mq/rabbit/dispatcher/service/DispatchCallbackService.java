@@ -79,7 +79,7 @@ public class DispatchCallbackService {
      * @param callbackConfig
      */
     public void onInvokeSuccess(Message message,CallbackConfig callbackConfig){
-        //TODO
+        //TODO 更新分发明细状态
     }
 
     /**
@@ -88,7 +88,7 @@ public class DispatchCallbackService {
      * @param callbackConfig
      */
     public void onInvokeFail(Message message,CallbackConfig callbackConfig){
-        //TODO
+        //TODO 更新分发明细状态
     }
 
 }
