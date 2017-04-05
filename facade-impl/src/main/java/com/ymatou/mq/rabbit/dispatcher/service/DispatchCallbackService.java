@@ -3,6 +3,7 @@ package com.ymatou.mq.rabbit.dispatcher.service;
 import com.ymatou.mq.infrastructure.model.CallbackConfig;
 import com.ymatou.mq.infrastructure.model.Message;
 import com.ymatou.mq.infrastructure.service.MessageConfigService;
+import com.ymatou.mq.infrastructure.service.MessageService;
 import com.ymatou.mq.rabbit.dispatcher.support.AdjustableSemaphore;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
@@ -26,17 +27,19 @@ public class DispatchCallbackService {
 
     private static final Logger logger = LoggerFactory.getLogger(DispatchCallbackService.class);
 
+    private AdjustableSemaphore semaphore;
+
     @Autowired
     private MessageConfigService messageConfigService;
 
-    private AdjustableSemaphore semaphore;
+    @Autowired
+    private MessageService messageService;
 
     /**
      * 回调处理
      * @param message
      */
     public void invoke(Message message){
-        //TODO async callback url
         List<CallbackConfig> callbackConfigList = messageConfigService.getCallbackConfigList(message.getAppId(),message.getQueueCode());
         if(CollectionUtils.isEmpty(callbackConfigList)){
             logger.error("appId:{},queueCode:{} not exist subscribler.",message.getAppId(),message.getQueueCode());
@@ -60,7 +63,7 @@ public class DispatchCallbackService {
      * @param callbackConfig
      */
     void doInvokeOne(Message message,CallbackConfig callbackConfig,Long timeout) throws InterruptedException {
-        //TODO
+        //TODO 信号量处理
         if (semaphore != null) {
             if (timeout != null) {
                 semaphore.tryAcquire(timeout);
@@ -69,8 +72,8 @@ public class DispatchCallbackService {
             }
         }
 
-        //TODO 处理异常
-        new AsyncHttpInvokeService(message,callbackConfig).send();
+        //async http send
+        new AsyncHttpInvokeService(message,callbackConfig,this).send();
     }
 
     /**
@@ -89,6 +92,8 @@ public class DispatchCallbackService {
      */
     public void onInvokeFail(Message message,CallbackConfig callbackConfig){
         //TODO 更新分发明细状态
+        //TODO 处理重试
+        //TODO 处理补单情况
     }
 
 }

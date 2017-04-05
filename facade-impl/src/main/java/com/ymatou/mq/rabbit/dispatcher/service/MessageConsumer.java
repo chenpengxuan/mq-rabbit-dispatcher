@@ -93,15 +93,21 @@ public class MessageConsumer {
         @Override
         public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
             Message message = new Message();
+            //TO message
+
+            //获取消息来源cluster
+            String cluster = properties.getType();
 
             try {
                 dispatchCallbackService.invoke(message);
             } catch (Exception e) {
                 logger.error("dispatch callback message:{} error.",message,e);
             } finally {
-                //TODO ack
-                masterChannel.basicAck(envelope.getDeliveryTag(),true);
-                //TODO slave ack
+                if(RabbitConstants.CLUSTER_MASTER.equals(cluster)){
+                    masterChannel.basicAck(envelope.getDeliveryTag(),true);
+                }else{
+                    slaveChannel.basicAck(envelope.getDeliveryTag(),true);
+                }
             }
         }
 

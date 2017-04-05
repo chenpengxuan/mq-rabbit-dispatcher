@@ -12,7 +12,7 @@ import javax.annotation.PostConstruct;
 import java.util.List;
 
 /**
- * MQ消息消费管理
+ * MQ消息消费管理，如启动、关闭消费等
  * Created by zhangzhihua on 2017/4/5.
  */
 public class MessageConsumerManager {
