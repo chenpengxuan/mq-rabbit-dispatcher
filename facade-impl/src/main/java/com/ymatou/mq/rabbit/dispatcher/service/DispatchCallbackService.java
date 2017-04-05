@@ -83,6 +83,7 @@ public class DispatchCallbackService {
      */
     public void onInvokeSuccess(Message message,CallbackConfig callbackConfig){
         //TODO 更新分发明细状态
+        messageService.updateMessageStatus(message);
     }
 
     /**
@@ -91,9 +92,38 @@ public class DispatchCallbackService {
      * @param callbackConfig
      */
     public void onInvokeFail(Message message,CallbackConfig callbackConfig){
-        //TODO 更新分发明细状态
-        //TODO 处理重试
-        //TODO 处理补单情况
+        if(this.isNeedRetry(callbackConfig)){//若需要重试
+            //TODO 进行重试操作
+        }else{//若不需要重试
+            boolean isNeedCompensate = this.isNeedCompensate(callbackConfig);
+            if(!isNeedCompensate){//若不需要补单
+                //TODO 更新分发明细状态
+                messageService.updateMessageStatus(message);
+            }else{//若需要补
+                //TODO 插补单
+                messageService.insertCompensate(message);
+                //TODO 更新分发明细状态
+                messageService.updateMessageStatus(message);
+            }
+        }
+    }
+
+    /**
+     * 判断是否需要重试
+     * @param callbackConfig
+     * @return
+     */
+    boolean isNeedRetry(CallbackConfig callbackConfig){
+        return false;
+    }
+
+    /**
+     * 判断是否需要补单
+     * @param callbackConfig
+     * @return
+     */
+    boolean isNeedCompensate(CallbackConfig callbackConfig){
+        return false;
     }
 
 }

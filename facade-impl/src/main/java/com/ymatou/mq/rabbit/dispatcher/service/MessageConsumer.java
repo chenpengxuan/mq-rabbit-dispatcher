@@ -104,6 +104,7 @@ public class MessageConsumer {
                 logger.error("dispatch callback message:{} error.",message,e);
             } finally {
                 if(RabbitConstants.CLUSTER_MASTER.equals(cluster)){
+                    //TODO 更新消息状态为consumed
                     masterChannel.basicAck(envelope.getDeliveryTag(),true);
                 }else{
                     slaveChannel.basicAck(envelope.getDeliveryTag(),true);
