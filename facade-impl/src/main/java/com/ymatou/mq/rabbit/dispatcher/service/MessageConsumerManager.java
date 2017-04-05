@@ -50,7 +50,6 @@ public class MessageConsumerManager {
                     MessageConsumer messageConsumer = new MessageConsumer(appConfig.getAppId(),queueConfig.getCode());
                     messageConsumer.setRabbitConfig(rabbitConfig);
                     messageConsumer.setDispatchCallbackService(dispatchCallbackService);
-                    //TODO set callback service
                     messageConsumer.start();
                 }
             }else{

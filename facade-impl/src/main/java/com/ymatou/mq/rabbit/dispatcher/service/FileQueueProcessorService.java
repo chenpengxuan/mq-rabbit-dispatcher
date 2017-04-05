@@ -30,16 +30,8 @@ public class FileQueueProcessorService implements Function<Pair<String, String>,
     @Autowired
     private FileDbConfig fileDbConfig;
 
-//    @Autowired
-//    private MessageService messageService;
-
-    public FileDb getFileDb() {
-        return fileDb;
-    }
-
-    public void setFileDb(FileDb fileDb) {
-        this.fileDb = fileDb;
-    }
+    @Autowired
+    private DispatchCallbackService dispatchCallbackService;
 
     @PostConstruct
     public void init() {
@@ -81,7 +73,8 @@ public class FileQueueProcessorService implements Function<Pair<String, String>,
         Boolean success = Boolean.FALSE;
         try {
             Message message = Message.fromJson(pair.getValue());
-            //success = messageService.saveMessage(message);
+            //消费数据，进行回调 TODO 操作结果
+            dispatchCallbackService.invoke(message);
         } catch (Exception e) {
             logger.error("save message to mongo error", e);
         }
