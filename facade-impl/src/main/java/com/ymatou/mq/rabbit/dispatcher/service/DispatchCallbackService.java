@@ -70,7 +70,7 @@ public class DispatchCallbackService {
         }
 
         //TODO 处理异常
-        new AsyncHttpInvokeService().send();
+        new AsyncHttpInvokeService(message,callbackConfig).send();
     }
 
     /**
