@@ -5,6 +5,7 @@ import com.ymatou.mq.infrastructure.model.Message;
 import com.ymatou.mq.rabbit.RabbitChannelFactory;
 import com.ymatou.mq.rabbit.config.RabbitConfig;
 import com.ymatou.mq.rabbit.support.ChannelWrapper;
+import com.ymatou.mq.rabbit.support.RabbitConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,12 +56,13 @@ public class MessageConsumer {
      * 初始化channel
      */
     public void init(){
-        //TODO 根据配置启动master/slave rabbit监听
-        //TODO 创建conn指定线程池数量
+        //创建conn指定线程池数量
         //TODO 可调整conn/channel对应的数量关系
-        ChannelWrapper channelWrapper = RabbitChannelFactory.getChannelWrapper(rabbitConfig);
-        masterChannel = channelWrapper.getChannel();
-        //TODO slave channel
+        ChannelWrapper masterChannelWrapper = RabbitChannelFactory.getChannelWrapper(rabbitConfig, RabbitConstants.CLUSTER_MASTER);
+        masterChannel = masterChannelWrapper.getChannel();
+
+        ChannelWrapper slaveChannelWrapper = RabbitChannelFactory.getChannelWrapper(rabbitConfig, RabbitConstants.CLUSTER_SLAVE);
+        slaveChannel = slaveChannelWrapper.getChannel();
     }
 
     /**
@@ -68,9 +70,11 @@ public class MessageConsumer {
      */
     public void start(){
         try {
-            masterChannel.basicConsume(this.queueCode,false,new ConumserHandler());
+            ConumserHandler conumserHandler = new ConumserHandler();
+            masterChannel.basicConsume(this.queueCode,false,conumserHandler);
+            slaveChannel.basicConsume(this.queueCode,false,conumserHandler);
         } catch (IOException e) {
-            logger.error("basic consume error.",e);
+            logger.error("basic consume error,queueCode:{}.",queueCode);
         }
     }
 
