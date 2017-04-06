@@ -2,14 +2,12 @@ package com.ymatou.mq.rabbit.dispatcher.service;
 
 import com.ymatou.mq.infrastructure.model.CallbackConfig;
 import com.ymatou.mq.infrastructure.model.Message;
+import com.ymatou.mq.infrastructure.model.MessageCompensate;
+import com.ymatou.mq.infrastructure.model.MessageDispatchDetail;
 import com.ymatou.mq.infrastructure.service.MessageConfigService;
 import com.ymatou.mq.infrastructure.service.MessageService;
 import com.ymatou.mq.rabbit.dispatcher.support.AdjustableSemaphore;
 import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.concurrent.FutureCallback;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -83,7 +81,8 @@ public class DispatchCallbackService {
      */
     public void onInvokeSuccess(Message message,CallbackConfig callbackConfig,HttpResponse result){
         //TODO 更新分发明细状态
-        messageService.updateMessageStatus(message);
+        MessageDispatchDetail messageDispatchDetail = MessageDispatchDetail.fromMessage(message);
+        messageService.updateDispatchDetail(messageDispatchDetail);
     }
 
     /**
@@ -98,12 +97,15 @@ public class DispatchCallbackService {
             boolean isNeedCompensate = this.isNeedCompensate(callbackConfig);
             if(!isNeedCompensate){//若不需要补单
                 //TODO 更新分发明细状态
-                messageService.updateMessageStatus(message);
+                MessageDispatchDetail messageDispatchDetail = MessageDispatchDetail.fromMessage(message);
+                messageService.updateDispatchDetail(messageDispatchDetail);
             }else{//若需要补
                 //TODO 插补单
-                messageService.insertCompensate(message);
+                MessageCompensate messageCompensate = MessageCompensate.fromMessage(message);
+                messageService.insertCompensate(messageCompensate);
                 //TODO 更新分发明细状态
-                messageService.updateMessageStatus(message);
+                MessageDispatchDetail messageDispatchDetail = MessageDispatchDetail.fromMessage(message);
+                messageService.updateDispatchDetail(messageDispatchDetail);
             }
         }
     }
