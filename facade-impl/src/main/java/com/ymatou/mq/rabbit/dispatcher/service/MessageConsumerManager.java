@@ -12,7 +12,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 /**
  * MQ消息消费管理，如启动、关闭消费等
@@ -35,6 +38,7 @@ public class MessageConsumerManager {
     @Autowired
     private DispatchCallbackService dispatchCallbackService;
 
+    List<Thread> threadList = new ArrayList<Thread>();
     /**
      * 启动消费监听
      */
@@ -62,9 +66,10 @@ public class MessageConsumerManager {
                     messageConsumer.start();
                 }
             }else{
-                //TODO 是否需要处理关停
+                //TODO 处理需要关停
             }
         }
+
     }
 
     /**
