@@ -5,10 +5,10 @@ import java.util.function.Function;
 
 import javax.annotation.PostConstruct;
 
+import com.ymatou.mq.rabbit.dispatcher.config.FileDbConf;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -28,23 +28,31 @@ public class FileQueueProcessorService implements Function<Pair<String, String>,
     private FileDb fileDb;
 
     @Autowired
-    private FileDbConfig fileDbConfig;
+    private FileDbConf fileDbConf;
 
     @Autowired
     private DispatchCallbackService dispatchCallbackService;
 
+    public FileDb getFileDb() {
+        return fileDb;
+    }
+
+    public void setFileDb(FileDb fileDb) {
+        this.fileDb = fileDb;
+    }
+
     @PostConstruct
     public void init() {
-        FileDbConfig fileDbConf = FileDbConfig.newInstance()
-                .setDbName(fileDbConfig.getDbName())
-                .setDbPath(fileDbConfig.getDbPath())
-                .setConsumerThreadNums(fileDbConfig.getConsumerThreadNums())
-                .setConsumeDuration(fileDbConfig.getConsumeDuration())
-                .setMaxConsumeSizeInDuration(fileDbConfig.getMaxConsumeSizeInDuration())
+        FileDbConfig fileDbConfig = FileDbConfig.newInstance()
+                .setDbName(this.fileDbConf.getDbName())
+                .setDbPath(this.fileDbConf.getDbPath())
+                .setConsumerThreadNums(this.fileDbConf.getConsumerThreadNums())
+                .setConsumeDuration(this.fileDbConf.getConsumeDuration())
+                .setMaxConsumeSizeInDuration(this.fileDbConf.getMaxConsumeSizeInDuration())
                 .setConsumer(this)
                 .setPutExceptionHandler(this);
 
-        fileDb = FileDb.newFileDb(fileDbConf);
+        fileDb = FileDb.newFileDb(fileDbConfig);
     }
 
 

@@ -81,7 +81,7 @@ public class DispatchCallbackService {
      * @param message
      * @param callbackConfig
      */
-    public void onInvokeSuccess(Message message,CallbackConfig callbackConfig){
+    public void onInvokeSuccess(Message message,CallbackConfig callbackConfig,HttpResponse result){
         //TODO 更新分发明细状态
         messageService.updateMessageStatus(message);
     }
@@ -91,7 +91,7 @@ public class DispatchCallbackService {
      * @param message
      * @param callbackConfig
      */
-    public void onInvokeFail(Message message,CallbackConfig callbackConfig){
+    public void onInvokeFail(Message message,CallbackConfig callbackConfig,Exception ex){
         if(this.isNeedRetry(callbackConfig)){//若需要重试
             //TODO 进行重试操作
         }else{//若不需要重试

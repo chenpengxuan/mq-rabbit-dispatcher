@@ -13,7 +13,7 @@
     <property name="basePackage" value="com.ymatou.mq.rabbit.receiver"/>
     <property name="baseDir" value="/usr/local/log/${appId}"/>
 
-    <property name="level" value="info"/>
+    <property name="level" value="debug"/>
     <property name="charset" value="UTF-8"/>
     <property name="immediateFlush" value="true"/>
     <property name="queueSize" value="1024"/>

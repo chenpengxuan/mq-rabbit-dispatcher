@@ -13,6 +13,8 @@ import org.apache.http.impl.nio.conn.PoolingNHttpClientConnectionManager;
 import org.apache.http.impl.nio.reactor.DefaultConnectingIOReactor;
 import org.apache.http.nio.reactor.ConnectingIOReactor;
 import org.apache.http.nio.reactor.IOReactorException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * async http调用service
@@ -20,7 +22,9 @@ import org.apache.http.nio.reactor.IOReactorException;
  */
 public class AsyncHttpInvokeService implements FutureCallback<HttpResponse> {
 
-    private CloseableHttpAsyncClient httpAsyncClient;
+    private static final Logger logger = LoggerFactory.getLogger(AsyncHttpInvokeService.class);
+
+    private static CloseableHttpAsyncClient httpAsyncClient;
 
     private Message message;
 
@@ -32,7 +36,6 @@ public class AsyncHttpInvokeService implements FutureCallback<HttpResponse> {
         this.message = message;
         this.callbackConfig = callbackConfig;
         this.dispatchCallbackService = dispatchCallbackService;
-        //TODO 创建数量关系
         if(httpAsyncClient == null){
             initAsyncHttpClient();
         }
@@ -54,9 +57,9 @@ public class AsyncHttpInvokeService implements FutureCallback<HttpResponse> {
                     .setConnectionRequestTimeout(5000)
                     .build();
 
-            CloseableHttpAsyncClient httpClient = HttpAsyncClients.custom().setDefaultRequestConfig(defaultRequestConfig)
+            httpAsyncClient = HttpAsyncClients.custom().setDefaultRequestConfig(defaultRequestConfig)
                     .setConnectionManager(cm).build();
-            httpClient.start();
+            httpAsyncClient.start();
         } catch (IOReactorException e) {
             throw new RuntimeException("crate async http client error.",e);
         }
@@ -82,17 +85,20 @@ public class AsyncHttpInvokeService implements FutureCallback<HttpResponse> {
 
     @Override
     public void completed(HttpResponse result) {
-        dispatchCallbackService.onInvokeSuccess(message,callbackConfig);
+        logger.info("http invoke completed,url:{},result:{}.",callbackConfig.getUrl(),result);
+        dispatchCallbackService.onInvokeSuccess(message,callbackConfig,result);
     }
 
     @Override
     public void cancelled() {
-        dispatchCallbackService.onInvokeFail(message,callbackConfig);
+        logger.error("http invoke cancelled,url:{}.",callbackConfig.getUrl());
+        dispatchCallbackService.onInvokeFail(message,callbackConfig,null);
     }
 
     @Override
     public void failed(Exception ex) {
-        dispatchCallbackService.onInvokeFail(message,callbackConfig);
+        logger.error("http invoke failed,url:{}.",callbackConfig.getUrl(),ex);
+        dispatchCallbackService.onInvokeFail(message,callbackConfig,ex);
     }
 
 

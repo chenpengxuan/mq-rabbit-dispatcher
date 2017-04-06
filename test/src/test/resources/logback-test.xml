@@ -2,7 +2,7 @@
 <configuration>
 	<property name="pattern"
 		value="%date [%thread] %-5level %logger{40} KEY[%X{logPrefix}] - %msg%n" />
-	<property name="level" value="info" />
+	<property name="level" value="debug" />
 	<property name="charset" value="UTF-8" />
 
 	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">

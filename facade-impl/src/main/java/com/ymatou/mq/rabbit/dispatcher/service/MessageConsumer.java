@@ -6,8 +6,10 @@ import com.ymatou.mq.rabbit.RabbitChannelFactory;
 import com.ymatou.mq.rabbit.config.RabbitConfig;
 import com.ymatou.mq.rabbit.support.ChannelWrapper;
 import com.ymatou.mq.rabbit.support.RabbitConstants;
+import org.apache.commons.lang.SerializationUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 import java.io.IOException;
 
@@ -30,11 +32,6 @@ public class MessageConsumer {
     private String queueCode;
 
     /**
-     * rabbit配置
-     */
-    private RabbitConfig rabbitConfig;
-
-    /**
      * master集群通道
      */
     private Channel masterChannel;
@@ -44,25 +41,16 @@ public class MessageConsumer {
      */
     private Channel slaveChannel;
 
+    /**
+     * rabbit配置
+     */
+    private RabbitConfig rabbitConfig;
+
     private DispatchCallbackService dispatchCallbackService;
 
     public MessageConsumer(String appId, String queueCode){
         this.appId = appId;
         this.queueCode = queueCode;
-        this.init();
-    }
-
-    /**
-     * 初始化channel
-     */
-    public void init(){
-        //创建conn指定线程池数量
-        //TODO 可调整conn/channel对应的数量关系
-        ChannelWrapper masterChannelWrapper = RabbitChannelFactory.getChannelWrapper(rabbitConfig, RabbitConstants.CLUSTER_MASTER);
-        masterChannel = masterChannelWrapper.getChannel();
-
-        ChannelWrapper slaveChannelWrapper = RabbitChannelFactory.getChannelWrapper(rabbitConfig, RabbitConstants.CLUSTER_SLAVE);
-        slaveChannel = slaveChannelWrapper.getChannel();
     }
 
     /**
@@ -70,6 +58,14 @@ public class MessageConsumer {
      */
     public void start(){
         try {
+            //创建conn指定线程池数量
+            //TODO 可调整conn/channel对应的数量关系
+            ChannelWrapper masterChannelWrapper = RabbitChannelFactory.getChannelWrapper(rabbitConfig, RabbitConstants.CLUSTER_MASTER);
+            masterChannel = masterChannelWrapper.getChannel();
+
+            ChannelWrapper slaveChannelWrapper = RabbitChannelFactory.getChannelWrapper(rabbitConfig, RabbitConstants.CLUSTER_SLAVE);
+            slaveChannel = slaveChannelWrapper.getChannel();
+
             ConumserHandler conumserHandler = new ConumserHandler();
             masterChannel.basicConsume(this.queueCode,false,conumserHandler);
             slaveChannel.basicConsume(this.queueCode,false,conumserHandler);
@@ -92,22 +88,33 @@ public class MessageConsumer {
 
         @Override
         public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
-            Message message = new Message();
-            //TO message
+            logger.debug("consumerTag:{},envelope:{},properties:{}.",consumerTag,envelope,properties);
 
             //获取消息来源cluster
             String cluster = properties.getType();
 
             try {
+                Message message = new Message();
+                message.setAppId(appId);
+                message.setQueueCode(queueCode);
+                String sbody = (String) SerializationUtils.deserialize(body);
+                message.setBody(sbody);
+                String msgId = properties.getMessageId();
+                message.setId(msgId);
+                String bizId = properties.getCorrelationId();
+                message.setBizId(bizId);
+
+                MDC.put("logPrefix", "MessageConsumer|" + bizId);
+
                 dispatchCallbackService.invoke(message);
             } catch (Exception e) {
-                logger.error("dispatch callback message:{} error.",message,e);
+                logger.error("dispatch callback error,consumerTag:{},envelope:{},properties:{}.",consumerTag,envelope,properties,e);
             } finally {
                 if(RabbitConstants.CLUSTER_MASTER.equals(cluster)){
                     //TODO 更新消息状态为consumed
-                    masterChannel.basicAck(envelope.getDeliveryTag(),true);
+                    masterChannel.basicAck(envelope.getDeliveryTag(),false);
                 }else{
-                    slaveChannel.basicAck(envelope.getDeliveryTag(),true);
+                    slaveChannel.basicAck(envelope.getDeliveryTag(),false);
                 }
             }
         }

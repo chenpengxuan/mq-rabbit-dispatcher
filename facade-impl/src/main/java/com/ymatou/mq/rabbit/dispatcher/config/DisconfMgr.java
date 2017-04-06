@@ -25,7 +25,7 @@ public class DisconfMgr {
     public DisconfMgrBean disconfMgrBean() {
 
         DisconfMgrBean disconfMgrBean = new DisconfMgrBean();
-        disconfMgrBean.setScanPackage("com.ymatou.userquery");
+        disconfMgrBean.setScanPackage("com.ymatou");
 
         return disconfMgrBean;
     }
