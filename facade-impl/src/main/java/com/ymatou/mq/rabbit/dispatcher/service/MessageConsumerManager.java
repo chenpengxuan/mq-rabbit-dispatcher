@@ -6,7 +6,10 @@ import com.ymatou.mq.infrastructure.service.MessageConfigService;
 import com.ymatou.mq.infrastructure.support.ConfigReloadListener;
 import com.ymatou.mq.rabbit.config.RabbitConfig;
 import com.ymatou.mq.rabbit.dispatcher.config.DispatchConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import java.util.List;
@@ -15,7 +18,10 @@ import java.util.List;
  * MQ消息消费管理，如启动、关闭消费等
  * Created by zhangzhihua on 2017/4/5.
  */
+@Component
 public class MessageConsumerManager {
+
+    private static final Logger logger = LoggerFactory.getLogger(MessageConsumerManager.class);
 
     @Autowired
     private MessageConfigService messageConfigService;
@@ -42,10 +48,13 @@ public class MessageConsumerManager {
             }
         });
         //启动消费监听
+        String groupId = dispatchConfig.getGroupId();
+        logger.debug("current group id:{}.",groupId);
         List<AppConfig> appConfigList = messageConfigService.getAllAppConfig();
+        logger.debug("appConfigList size:{}.",appConfigList != null?appConfigList.size():"0");
         for(AppConfig appConfig:appConfigList){
             String dispatchGroup = appConfig.getDispatchGroup();
-            if (dispatchGroup != null && dispatchGroup.contains(dispatchConfig.getGroupId())) {
+            if (dispatchGroup != null && dispatchGroup.contains(groupId)) {
                 for (QueueConfig queueConfig : appConfig.getMessageCfgList()) {
                     MessageConsumer messageConsumer = new MessageConsumer(appConfig.getAppId(),queueConfig.getCode());
                     messageConsumer.setRabbitConfig(rabbitConfig);
@@ -53,8 +62,23 @@ public class MessageConsumerManager {
                     messageConsumer.start();
                 }
             }else{
-                //TODO
+                //TODO 是否需要处理关停
             }
         }
+    }
+
+    /**
+     * 停止所有queue监听
+     */
+    public void stopAll(){
+        //TODO 停止所有queue
+    }
+
+    /**
+     * stop对应的queue消费监听
+     * @param queueCode
+     */
+    public void stop(String queueCode){
+        //TODO
     }
 }
