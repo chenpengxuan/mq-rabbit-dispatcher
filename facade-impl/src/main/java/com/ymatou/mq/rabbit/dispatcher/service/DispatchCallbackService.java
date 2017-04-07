@@ -28,6 +28,7 @@ public class DispatchCallbackService {
 
     private static final Logger logger = LoggerFactory.getLogger(DispatchCallbackService.class);
 
+    //TODO 信号量初始化
     private AdjustableSemaphore semaphore;
 
     @Autowired
@@ -83,7 +84,7 @@ public class DispatchCallbackService {
      * @param callbackConfig
      */
     public void onInvokeSuccess(Message message,CallbackConfig callbackConfig,HttpResponse result){
-        //TODO 更新分发明细状态
+        //更新分发明细状态
         CallbackResult callbackResult = this.buildCallbackResult(message,callbackConfig,result);
         messageService.updateDispatchDetail(callbackResult);
     }
