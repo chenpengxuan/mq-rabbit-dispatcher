@@ -1,11 +1,10 @@
 package com.ymatou.mq.rabbit.dispatcher.service;
 
-import com.ymatou.mq.infrastructure.model.CallbackConfig;
-import com.ymatou.mq.infrastructure.model.Message;
-import com.ymatou.mq.infrastructure.model.MessageCompensate;
-import com.ymatou.mq.infrastructure.model.MessageDispatchDetail;
+import com.ymatou.mq.infrastructure.model.*;
 import com.ymatou.mq.infrastructure.service.MessageConfigService;
 import com.ymatou.mq.infrastructure.service.MessageService;
+import com.ymatou.mq.infrastructure.support.enums.CallbackFromEnum;
+import com.ymatou.mq.infrastructure.support.enums.DispatchStatusEnum;
 import com.ymatou.mq.rabbit.dispatcher.support.AdjustableSemaphore;
 import org.apache.http.HttpResponse;
 import org.slf4j.Logger;
@@ -81,8 +80,8 @@ public class DispatchCallbackService {
      */
     public void onInvokeSuccess(Message message,CallbackConfig callbackConfig,HttpResponse result){
         //TODO 更新分发明细状态
-        MessageDispatchDetail messageDispatchDetail = MessageDispatchDetail.fromMessage(message);
-        messageService.updateDispatchDetail(messageDispatchDetail);
+        CallbackResult callbackResult = this.buildCallbackResult(message,callbackConfig,result);
+        messageService.updateDispatchDetail(callbackResult);
     }
 
     /**
@@ -95,17 +94,17 @@ public class DispatchCallbackService {
             //TODO 进行重试操作
         }else{//若不需要重试
             boolean isNeedCompensate = this.isNeedCompensate(callbackConfig);
-            if(!isNeedCompensate){//若不需要补单
-                //TODO 更新分发明细状态
-                MessageDispatchDetail messageDispatchDetail = MessageDispatchDetail.fromMessage(message);
-                messageService.updateDispatchDetail(messageDispatchDetail);
-            }else{//若需要补
+            if(isNeedCompensate){//若需要补单
+                //更新分发明细状态
+                CallbackResult callbackResult = this.buildCallbackResult(message,callbackConfig,ex,true);
+                messageService.updateDispatchDetail(callbackResult);
+            }else{//若不需要补单
                 //TODO 插补单
-                MessageCompensate messageCompensate = MessageCompensate.fromMessage(message);
+                MessageCompensate messageCompensate = this.buildCompensate(message,callbackConfig);
                 messageService.insertCompensate(messageCompensate);
-                //TODO 更新分发明细状态
-                MessageDispatchDetail messageDispatchDetail = MessageDispatchDetail.fromMessage(message);
-                messageService.updateDispatchDetail(messageDispatchDetail);
+                //更新分发明细状态
+                CallbackResult callbackResult = this.buildCallbackResult(message,callbackConfig,ex,false);
+                messageService.updateDispatchDetail(callbackResult);
             }
         }
     }
@@ -126,6 +125,73 @@ public class DispatchCallbackService {
      */
     boolean isNeedCompensate(CallbackConfig callbackConfig){
         return false;
+    }
+
+    /**
+     * 构造回调结果
+     * @param message
+     * @param callbackConfig
+     * @param result
+     * @return
+     */
+    CallbackResult buildCallbackResult(Message message,CallbackConfig callbackConfig,HttpResponse result){
+        CallbackResult callbackResult = new CallbackResult();
+        //调用来源
+        callbackResult.setFrom(CallbackFromEnum.DISPATCH.ordinal());
+        //TODO 补字段属性
+        //调用url
+        //调用请求报文
+        //调用响应报文
+        //调用开始时间
+        //调用结束时间
+        //调用结果
+        if(result != null && result.getStatusLine() != null && result.getStatusLine().getStatusCode() == 200){
+            callbackResult.setResult(DispatchStatusEnum.SUCCESS.ordinal());
+        }else{
+            callbackResult.setResult(DispatchStatusEnum.FAIL.ordinal());
+        }
+        //计数+1 TODO
+        return callbackResult;
+    }
+
+    /**
+     * 构造回调结果
+     * @param message
+     * @param callbackConfig
+     * @param ex
+     * @param isNeedCompensate
+     * @return
+     */
+    CallbackResult buildCallbackResult(Message message,CallbackConfig callbackConfig,Exception ex,boolean isNeedCompensate){
+        CallbackResult callbackResult = new CallbackResult();
+        //调用来源
+        callbackResult.setFrom(CallbackFromEnum.DISPATCH.ordinal());
+        //TODO 补字段属性
+        //调用url
+        //调用请求报文
+        //调用响应报文
+        //调用开始时间
+        //调用结束时间
+        //调用结果
+        if(isNeedCompensate){
+            callbackResult.setResult(DispatchStatusEnum.COMPENSATE.ordinal());
+        }else{
+            callbackResult.setResult(DispatchStatusEnum.FAIL.ordinal());
+        }
+        //计数+1 TODO
+        return callbackResult;
+    }
+
+    /**
+     * 构造补单
+     * @param message
+     * @param callbackConfig
+     * @return
+     */
+    MessageCompensate buildCompensate(Message message,CallbackConfig callbackConfig){
+        //TODO
+        MessageCompensate messageCompensate = new MessageCompensate();
+        return messageCompensate;
     }
 
 }
