@@ -100,7 +100,7 @@ public class MessageConsumer implements Consumer{
 
     @Override
     public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
-        logger.debug("consumerTag:{},envelope:{},properties:{}.",consumerTag,envelope,properties);
+        logger.info("consumerTag:{},envelope:{},properties:{}.",consumerTag,envelope,properties);
 
         //获取消息来源cluster
         String cluster = properties.getType();

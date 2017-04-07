@@ -136,6 +136,10 @@ public class DispatchCallbackService {
      */
     CallbackResult buildCallbackResult(Message message,CallbackConfig callbackConfig,HttpResponse result){
         CallbackResult callbackResult = new CallbackResult();
+        callbackResult.setAppId(message.getAppId());
+        callbackResult.setQueueCode(message.getQueueCode());
+        callbackResult.setConsumerId(callbackConfig.getCallbackKey());
+        callbackResult.setMsgId(message.getId());
         //调用来源
         callbackResult.setFrom(CallbackFromEnum.DISPATCH.ordinal());
         //调用url
