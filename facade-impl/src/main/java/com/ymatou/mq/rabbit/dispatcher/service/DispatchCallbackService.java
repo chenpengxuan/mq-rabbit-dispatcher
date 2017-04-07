@@ -4,6 +4,8 @@ import com.ymatou.mq.infrastructure.model.*;
 import com.ymatou.mq.infrastructure.service.MessageConfigService;
 import com.ymatou.mq.infrastructure.service.MessageService;
 import com.ymatou.mq.infrastructure.support.enums.CallbackFromEnum;
+import com.ymatou.mq.infrastructure.support.enums.CompensateFromEnum;
+import com.ymatou.mq.infrastructure.support.enums.CompensateStatusEnum;
 import com.ymatou.mq.infrastructure.support.enums.DispatchStatusEnum;
 import com.ymatou.mq.rabbit.dispatcher.support.AdjustableSemaphore;
 import org.apache.http.HttpResponse;
@@ -13,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -90,40 +93,37 @@ public class DispatchCallbackService {
      * @param callbackConfig
      */
     public void onInvokeFail(Message message,CallbackConfig callbackConfig,Exception ex){
-        if(this.isNeedRetry(callbackConfig)){//若需要重试
-            //TODO 进行重试操作
-        }else{//若不需要重试
-            boolean isNeedCompensate = this.isNeedCompensate(callbackConfig);
-            if(isNeedCompensate){//若需要补单
-                //更新分发明细状态
-                CallbackResult callbackResult = this.buildCallbackResult(message,callbackConfig,ex,true);
-                messageService.updateDispatchDetail(callbackResult);
-            }else{//若不需要补单
-                //TODO 插补单
-                MessageCompensate messageCompensate = this.buildCompensate(message,callbackConfig);
-                messageService.insertCompensate(messageCompensate);
-                //更新分发明细状态
-                CallbackResult callbackResult = this.buildCallbackResult(message,callbackConfig,ex,false);
-                messageService.updateDispatchDetail(callbackResult);
-            }
+        boolean isNeedInsertCompensate = this.isNeedInsertCompensate(callbackConfig);
+        if(isNeedInsertCompensate){//若需要插补单
+            //TODO 插补单
+            MessageCompensate messageCompensate = this.buildCompensate(message,callbackConfig);
+            messageService.insertCompensate(messageCompensate);
+            //更新分发明细状态
+            CallbackResult callbackResult = this.buildCallbackResult(message,callbackConfig,ex,true);
+            messageService.updateDispatchDetail(callbackResult);
+        }else{//若不需要插补单
+            //更新分发明细状态
+            CallbackResult callbackResult = this.buildCallbackResult(message,callbackConfig,ex,false);
+            messageService.updateDispatchDetail(callbackResult);
         }
     }
 
     /**
-     * 判断是否需要重试
+     * 判断是否需要插补单记录，开启配置&开启消息存储&开启补单
      * @param callbackConfig
      * @return
      */
-    boolean isNeedRetry(CallbackConfig callbackConfig){
-        return false;
-    }
-
-    /**
-     * 判断是否需要补单
-     * @param callbackConfig
-     * @return
-     */
-    boolean isNeedCompensate(CallbackConfig callbackConfig){
+    boolean isNeedInsertCompensate(CallbackConfig callbackConfig){
+        //若队列配置、回调配置开启
+        if(callbackConfig.getQueueConfig().getEnable() && callbackConfig.getEnable()){
+            //若队列配置开启消息存储
+            if(callbackConfig.getQueueConfig().getEnableLog()){
+                //若开启补单
+                if(callbackConfig.getIsRetry() != null && callbackConfig.getIsRetry() > 0){
+                    return true;
+                }
+            }
+        }
         return false;
     }
 
@@ -138,19 +138,22 @@ public class DispatchCallbackService {
         CallbackResult callbackResult = new CallbackResult();
         //调用来源
         callbackResult.setFrom(CallbackFromEnum.DISPATCH.ordinal());
-        //TODO 补字段属性
         //调用url
+        callbackResult.setUrl(callbackConfig.getUrl());
         //调用请求报文
+        callbackResult.setRequest(message.getBody());
         //调用响应报文
+        callbackResult.setResponse("");
         //调用开始时间
+        callbackResult.setReqTime(null);
         //调用结束时间
+        callbackResult.setRespTime(new Date());
         //调用结果
         if(result != null && result.getStatusLine() != null && result.getStatusLine().getStatusCode() == 200){
             callbackResult.setResult(DispatchStatusEnum.SUCCESS.ordinal());
         }else{
             callbackResult.setResult(DispatchStatusEnum.FAIL.ordinal());
         }
-        //计数+1 TODO
         return callbackResult;
     }
 
@@ -166,19 +169,22 @@ public class DispatchCallbackService {
         CallbackResult callbackResult = new CallbackResult();
         //调用来源
         callbackResult.setFrom(CallbackFromEnum.DISPATCH.ordinal());
-        //TODO 补字段属性
         //调用url
+        callbackResult.setUrl(callbackConfig.getUrl());
         //调用请求报文
+        callbackResult.setRequest(message.getBody());
         //调用响应报文
+        callbackResult.setResponse("");
         //调用开始时间
+        callbackResult.setReqTime(null);
         //调用结束时间
+        callbackResult.setRespTime(new Date());
         //调用结果
         if(isNeedCompensate){
             callbackResult.setResult(DispatchStatusEnum.COMPENSATE.ordinal());
         }else{
             callbackResult.setResult(DispatchStatusEnum.FAIL.ordinal());
         }
-        //计数+1 TODO
         return callbackResult;
     }
 
@@ -191,7 +197,26 @@ public class DispatchCallbackService {
     MessageCompensate buildCompensate(Message message,CallbackConfig callbackConfig){
         //TODO
         MessageCompensate messageCompensate = new MessageCompensate();
+        messageCompensate.setId(this.buildCompensateId(message,callbackConfig));
+        messageCompensate.setAppId(message.getAppId());
+        messageCompensate.setQueueCode(message.getQueueCode());
+        messageCompensate.setBizId(message.getBizId());
+        messageCompensate.setSource(CompensateFromEnum.DISPATCH.ordinal());
+        messageCompensate.setStatus(CompensateStatusEnum.INIT.ordinal());
+        //TODO 时间
+        messageCompensate.setCreateTime(new Date());
+        //TODO 次数
         return messageCompensate;
+    }
+
+    /**
+     * 生成补单id TODO
+     * @param message
+     * @param callbackConfig
+     * @return
+     */
+    String buildCompensateId(Message message,CallbackConfig callbackConfig){
+        return String.format("%s_%s",message.getId(),callbackConfig.getCallbackKey());
     }
 
 }
