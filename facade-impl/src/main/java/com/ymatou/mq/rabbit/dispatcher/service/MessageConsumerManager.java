@@ -38,7 +38,6 @@ public class MessageConsumerManager {
     @Autowired
     private DispatchCallbackService dispatchCallbackService;
 
-    List<Thread> threadList = new ArrayList<Thread>();
     /**
      * 启动消费监听
      */
