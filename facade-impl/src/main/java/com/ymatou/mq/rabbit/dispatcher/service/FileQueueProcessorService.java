@@ -85,8 +85,9 @@ public class FileQueueProcessorService implements Function<Pair<String, String>,
             dispatchCallbackService.invoke(message);
         } catch (Exception e) {
             logger.error("save message to mongo error", e);
+            return false;
         }
-        return success;
+        return true;
     }
 
     @Override

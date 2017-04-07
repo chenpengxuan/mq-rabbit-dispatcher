@@ -9,6 +9,7 @@ import com.ymatou.mq.infrastructure.support.enums.CompensateStatusEnum;
 import com.ymatou.mq.infrastructure.support.enums.DispatchStatusEnum;
 import com.ymatou.mq.rabbit.dispatcher.support.AdjustableSemaphore;
 import org.apache.http.HttpResponse;
+import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -95,9 +96,10 @@ public class DispatchCallbackService {
     public void onInvokeFail(Message message,CallbackConfig callbackConfig,Exception ex){
         boolean isNeedInsertCompensate = this.isNeedInsertCompensate(callbackConfig);
         if(isNeedInsertCompensate){//若需要插补单
-            //TODO 插补单
+            //插补单
             MessageCompensate messageCompensate = this.buildCompensate(message,callbackConfig);
             messageService.insertCompensate(messageCompensate);
+
             //更新分发明细状态
             CallbackResult callbackResult = this.buildCallbackResult(message,callbackConfig,ex,true);
             messageService.updateDispatchDetail(callbackResult);
@@ -171,6 +173,10 @@ public class DispatchCallbackService {
      */
     CallbackResult buildCallbackResult(Message message,CallbackConfig callbackConfig,Exception ex,boolean isNeedCompensate){
         CallbackResult callbackResult = new CallbackResult();
+        callbackResult.setAppId(message.getAppId());
+        callbackResult.setQueueCode(message.getQueueCode());
+        callbackResult.setConsumerId(callbackConfig.getCallbackKey());
+        callbackResult.setMsgId(message.getId());
         //调用来源
         callbackResult.setFrom(CallbackFromEnum.DISPATCH.ordinal());
         //调用url
@@ -201,10 +207,10 @@ public class DispatchCallbackService {
     MessageCompensate buildCompensate(Message message,CallbackConfig callbackConfig){
         //TODO
         MessageCompensate messageCompensate = new MessageCompensate();
-        messageCompensate.setId(this.buildCompensateId(message,callbackConfig));
+        messageCompensate.setId(ObjectId.get().toString());
         messageCompensate.setAppId(message.getAppId());
         messageCompensate.setQueueCode(message.getQueueCode());
-        messageCompensate.setBizId(message.getBizId());
+        messageCompensate.setMsgId(message.getId());
         messageCompensate.setSource(CompensateFromEnum.DISPATCH.ordinal());
         messageCompensate.setStatus(CompensateStatusEnum.INIT.ordinal());
         //TODO 时间
