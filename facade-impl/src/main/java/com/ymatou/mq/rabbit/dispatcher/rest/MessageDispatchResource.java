@@ -10,7 +10,7 @@ package com.ymatou.mq.rabbit.dispatcher.rest;
 /**
  * @author luoshiqian 2016/8/31 14:12
  */
-public interface DemoResource {
+public interface MessageDispatchResource {
 
     String sayHello(String name);
 

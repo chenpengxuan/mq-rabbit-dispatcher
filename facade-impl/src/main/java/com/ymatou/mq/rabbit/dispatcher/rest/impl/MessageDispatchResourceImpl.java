@@ -11,9 +11,9 @@ import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.*;
 
-import com.ymatou.mq.rabbit.dispatcher.rest.DemoResource;
+import com.ymatou.mq.rabbit.dispatcher.rest.MessageDispatchResource;
 import com.ymatou.mq.rabbit.dispatcher.util.Constants;
-import com.ymatou.mq.rabbit.dispatcher.facade.DemoFacade;
+import com.ymatou.mq.rabbit.dispatcher.facade.MessageDispatchFacade;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,12 +26,12 @@ import com.alibaba.dubbo.config.annotation.Service;
 @Produces({"application/json; charset=UTF-8"})
 @Service(protocol = "rest")
 @Path("/{api:(?i:api)}")
-public class DemoResourceImpl implements DemoResource {
+public class MessageDispatchResourceImpl implements MessageDispatchResource {
 
-    public static final Logger logger = LoggerFactory.getLogger(DemoResourceImpl.class);
+    public static final Logger logger = LoggerFactory.getLogger(MessageDispatchResourceImpl.class);
 
     @Autowired
-    private DemoFacade demoFacade;
+    private MessageDispatchFacade demoFacade;
 
 
     @GET

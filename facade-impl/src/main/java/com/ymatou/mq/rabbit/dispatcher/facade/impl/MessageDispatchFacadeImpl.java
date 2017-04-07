@@ -9,7 +9,7 @@ package com.ymatou.mq.rabbit.dispatcher.facade.impl;
 
 
 import com.alibaba.dubbo.config.annotation.Service;
-import com.ymatou.mq.rabbit.dispatcher.facade.DemoFacade;
+import com.ymatou.mq.rabbit.dispatcher.facade.MessageDispatchFacade;
 import org.springframework.stereotype.Component;
 
 
@@ -18,7 +18,7 @@ import org.springframework.stereotype.Component;
  */
 @Service(protocol = "dubbo")
 @Component
-public class DemoFacadeImpl implements DemoFacade {
+public class MessageDispatchFacadeImpl implements MessageDispatchFacade {
 
     @Override
     public String sayHello(String name) {
