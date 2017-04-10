@@ -16,6 +16,9 @@ dependencies {
 
 	compile "com.ymatou.resteasy:resteasy-jaxrs:${resteasyJaxrsVersion}"
 	compile "com.ymatou.resteasy:resteasy-client:${resteasyJaxrsVersion}"
+
+//	compile "com.ymatou.mq:mq-infrastructure:${mqInfrastructureVersion}"
+//	compile "com.ymatou.mq:mq-rabbit-common:${mqRabbitCommonVersion}"
 }
 
 

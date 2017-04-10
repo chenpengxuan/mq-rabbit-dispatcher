@@ -74,8 +74,8 @@ public class DispatchCallbackService {
      * @param callbackConfig
      */
     public void onInvokeSuccess(Message message,CallbackConfig callbackConfig,HttpResponse result){
-        //更新分发明细状态
         try {
+            //更新分发明细状态
             CallbackResult callbackResult = this.buildCallbackResult(message,callbackConfig,result);
             messageService.updateDispatchDetail(callbackResult);
         } catch (IOException e) {
@@ -125,44 +125,6 @@ public class DispatchCallbackService {
     }
 
     /**
-     * 构造回调结果
-     * @param message
-     * @param callbackConfig
-     * @param result
-     * @return
-     */
-    CallbackResult buildCallbackResult(Message message,CallbackConfig callbackConfig,HttpResponse result) throws IOException {
-        HttpEntity entity = result.getEntity();
-        String reponseStr = EntityUtils.toString(entity, "UTF-8");
-        int statusCode = result.getStatusLine().getStatusCode();
-
-        CallbackResult callbackResult = new CallbackResult();
-        callbackResult.setAppId(message.getAppId());
-        callbackResult.setQueueCode(message.getQueueCode());
-        callbackResult.setConsumerId(callbackConfig.getCallbackKey());
-        callbackResult.setMsgId(message.getId());
-        //调用来源
-        callbackResult.setFrom(CallbackFromEnum.DISPATCH.ordinal());
-        //调用url
-        callbackResult.setUrl(callbackConfig.getUrl());
-        //调用请求报文
-        callbackResult.setRequest(message.getBody());
-        //调用响应报文
-        callbackResult.setResponse("");
-        //调用开始时间
-        callbackResult.setReqTime(null);
-        //调用结束时间
-        callbackResult.setRespTime(new Date());
-        //调用结果
-        if(this.isCallbackSuccess(statusCode,reponseStr)){
-            callbackResult.setResult(DispatchStatusEnum.SUCCESS.ordinal());
-        }else{
-            callbackResult.setResult(DispatchStatusEnum.FAIL.ordinal());
-        }
-        return callbackResult;
-    }
-
-    /**
      * 根据返回代码判断是否成功
      * @param statusCode
      * @param body
@@ -178,7 +140,45 @@ public class DispatchCallbackService {
     }
 
     /**
-     * 构造回调结果
+     * 构造回调结果，正常响应的情况
+     * @param message
+     * @param callbackConfig
+     * @param result
+     * @return
+     */
+    CallbackResult buildCallbackResult(Message message,CallbackConfig callbackConfig,HttpResponse result) throws IOException {
+        HttpEntity entity = result.getEntity();
+        int statusCode = result.getStatusLine().getStatusCode();
+        String reponse = EntityUtils.toString(entity, "UTF-8");
+
+        CallbackResult callbackResult = new CallbackResult();
+        callbackResult.setAppId(message.getAppId());
+        callbackResult.setQueueCode(message.getQueueCode());
+        callbackResult.setConsumerId(callbackConfig.getCallbackKey());
+        callbackResult.setMsgId(message.getId());
+        //来源
+        callbackResult.setFrom(CallbackFromEnum.DISPATCH.ordinal());
+        //url
+        callbackResult.setUrl(callbackConfig.getUrl());
+        //请求报文
+        callbackResult.setRequest(message.getBody());
+        //响应报文
+        callbackResult.setResponse(reponse);
+        //请求时间
+        callbackResult.setReqTime(message.getCreateTime());
+        //响应时间
+        callbackResult.setRespTime(new Date());
+        //调用结果
+        if(this.isCallbackSuccess(statusCode,reponse)){
+            callbackResult.setResult(DispatchStatusEnum.SUCCESS.ordinal());
+        }else{
+            callbackResult.setResult(DispatchStatusEnum.FAIL.ordinal());
+        }
+        return callbackResult;
+    }
+
+    /**
+     * 构造回调结果，响应异常或无响应的
      * @param message
      * @param callbackConfig
      * @param ex
@@ -191,17 +191,17 @@ public class DispatchCallbackService {
         callbackResult.setQueueCode(message.getQueueCode());
         callbackResult.setConsumerId(callbackConfig.getCallbackKey());
         callbackResult.setMsgId(message.getId());
-        //调用来源
+        //来源
         callbackResult.setFrom(CallbackFromEnum.DISPATCH.ordinal());
-        //调用url
+        //url
         callbackResult.setUrl(callbackConfig.getUrl());
-        //调用请求报文
+        //请求报文
         callbackResult.setRequest(message.getBody());
-        //调用响应报文
-        callbackResult.setResponse("");
-        //调用开始时间
-        callbackResult.setReqTime(null);
-        //调用结束时间
+        //响应报文
+        callbackResult.setResponse(ex != null?ex.getLocalizedMessage():"");
+        //请求时间
+        callbackResult.setReqTime(message.getCreateTime());
+        //响应时间
         callbackResult.setRespTime(new Date());
         //调用结果
         if(isNeedCompensate){
