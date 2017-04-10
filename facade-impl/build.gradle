@@ -8,8 +8,8 @@ jar {
 
 dependencies {
 	
-	compile(project(":mq-rabbit-common"))
-	compile(project(":mq-infrastructure"))
+//	compile(project(":mq-rabbit-common"))
+//	compile(project(":mq-infrastructure"))
 	compile(project(":facade-interface"))
 
 	compile "com.alibaba:dubbo:${dubboxVersion}"
@@ -17,8 +17,8 @@ dependencies {
 	compile "com.ymatou.resteasy:resteasy-jaxrs:${resteasyJaxrsVersion}"
 	compile "com.ymatou.resteasy:resteasy-client:${resteasyJaxrsVersion}"
 
-//	compile "com.ymatou.mq:mq-infrastructure:${mqInfrastructureVersion}"
-//	compile "com.ymatou.mq:mq-rabbit-common:${mqRabbitCommonVersion}"
+	compile "com.ymatou.mq:mq-infrastructure:${mqInfrastructureVersion}"
+	compile "com.ymatou.mq:mq-rabbit-common:${mqRabbitCommonVersion}"
 }
 
 

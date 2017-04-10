@@ -34,14 +34,14 @@
     </bean>
 
     <!-- 提供方应用信息，用于计算依赖关系 -->
-    <dubbo:application name="rabbitMqReceiver" logger="slf4j"/>
+    <dubbo:application name="dispatcher.rmq.iapi.ymatou.com" logger="slf4j"/>
 
-    <dubbo:registry address="zookeeper://${dubbo.zoo}" timeout="2000"/>
+    <dubbo:registry address="zookeeper://${dubbo.zoo}" timeout="10000"/>
 
     <!--  关闭没有服务提供者是报错 -->
     <dubbo:consumer check="false"/>
 
-    <dubbo:annotation package="com.ymatou.mq.rabbit.dispatcher.facade"/>
+    <dubbo:annotation package="com.ymatou.mq.rabbit.dispatcher"/>
 
     <!-- 用dubbo协议在20880端口暴露服务 -->
     <dubbo:protocol name="dubbo" port="${dubbo.port}" />

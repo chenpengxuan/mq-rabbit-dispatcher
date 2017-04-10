@@ -17,7 +17,7 @@ import com.ymatou.mq.rabbit.dispatcher.config.TomcatConfig;
  */
 public class Constants {
 
-    public static final String APP_ID = "userquery.trading.iapi.ymatou.com";
+    public static final String APP_ID = "dispatcher.rmq.iapi.ymatou.com";
 
     public static final String LOG_PREFIX = "logPrefix";
 

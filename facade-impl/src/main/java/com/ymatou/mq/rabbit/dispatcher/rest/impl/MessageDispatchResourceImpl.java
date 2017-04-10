@@ -7,13 +7,13 @@
 
 package com.ymatou.mq.rabbit.dispatcher.rest.impl;
 
-import java.util.concurrent.TimeUnit;
-
 import javax.ws.rs.*;
 
+import com.ymatou.mq.infrastructure.model.Message;
+import com.ymatou.mq.rabbit.dispatcher.facade.model.DispatchMessageReq;
+import com.ymatou.mq.rabbit.dispatcher.facade.model.DispatchMessageResp;
 import com.ymatou.mq.rabbit.dispatcher.rest.MessageDispatchResource;
-import com.ymatou.mq.rabbit.dispatcher.util.Constants;
-import com.ymatou.mq.rabbit.dispatcher.facade.MessageDispatchFacade;
+import com.ymatou.mq.rabbit.dispatcher.service.MessageDispatchService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,38 +31,19 @@ public class MessageDispatchResourceImpl implements MessageDispatchResource {
     public static final Logger logger = LoggerFactory.getLogger(MessageDispatchResourceImpl.class);
 
     @Autowired
-    private MessageDispatchFacade demoFacade;
-
-
-    @GET
-    @Path("/{sayHello:(?i:sayHello)}")
-    @Override
-    public String sayHello(@QueryParam("name") String name) {
-        return demoFacade.sayHello(name);
-    }
+    private MessageDispatchService messageDispatchService;
 
     @GET
-    @Path("/{testShutdownGracefully:(?i:testShutdownGracefully)}")
+    @Path("/{dispatch:(?i:dispatch)}")
     @Override
-    public String testShutdownGracefully() {
+    public DispatchMessageResp dispatch(DispatchMessageReq req){
+        Message message = new Message();
 
-        logger.info("------------test begin start sleep 5 seconds -----------------");
+        //TODO
+        messageDispatchService.dispatch(message);
 
-        try {
-            TimeUnit.SECONDS.sleep(5);
-        } catch (InterruptedException e) {
-            logger.info("eception:",e);
-        }
-
-        logger.info("------------end test request success -----------------");
-        return null;
+        DispatchMessageResp resp = new DispatchMessageResp();
+        return resp;
     }
 
-    @POST
-    @Path("/{shutdown:(?i:shutdown)}")
-    @Override
-    public String shutdown() {
-        Constants.ctx.close();
-        return "";
-    }
 }

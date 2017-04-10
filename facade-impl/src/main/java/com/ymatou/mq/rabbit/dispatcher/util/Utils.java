@@ -6,6 +6,7 @@
 
 package com.ymatou.mq.rabbit.dispatcher.util;
 
+import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,6 +28,10 @@ public class Utils {
 
     private Utils() {};
 
+
+    public static String uuid() {
+        return new ObjectId().toHexString();
+    }
 
     public static String localIp() {
         if (localIp != null) {
