@@ -8,7 +8,9 @@ import com.ymatou.mq.infrastructure.support.enums.CompensateFromEnum;
 import com.ymatou.mq.infrastructure.support.enums.CompensateStatusEnum;
 import com.ymatou.mq.infrastructure.support.enums.DispatchStatusEnum;
 import com.ymatou.mq.rabbit.dispatcher.support.AdjustableSemaphore;
+import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
+import org.apache.http.util.EntityUtils;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
+import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 
@@ -27,9 +30,6 @@ import java.util.List;
 public class DispatchCallbackService {
 
     private static final Logger logger = LoggerFactory.getLogger(DispatchCallbackService.class);
-
-    //TODO 信号量初始化
-    private AdjustableSemaphore semaphore;
 
     @Autowired
     private MessageConfigService messageConfigService;
@@ -49,12 +49,7 @@ public class DispatchCallbackService {
         }
 
         for(CallbackConfig callbackConfig:callbackConfigList){
-            try {
-                doInvokeOne(message,callbackConfig,null);
-            } catch (InterruptedException e) {
-                //TODO 异常处理&返回值
-                logger.error("invoke one error.",e);
-            }
+            doInvokeOne(message,callbackConfig,null);
         }
 
     }
@@ -64,18 +59,13 @@ public class DispatchCallbackService {
      * @param message
      * @param callbackConfig
      */
-    void doInvokeOne(Message message,CallbackConfig callbackConfig,Long timeout) throws InterruptedException {
-        //TODO 信号量处理
-        if (semaphore != null) {
-            if (timeout != null) {
-                semaphore.tryAcquire(timeout);
-            } else {
-                semaphore.acquire();
-            }
-        }
-
+    void doInvokeOne(Message message,CallbackConfig callbackConfig,Long timeout){
         //async http send
-        new AsyncHttpInvokeService(message,callbackConfig,this).send();
+        try {
+            new AsyncHttpInvokeService(message,callbackConfig,this).send();
+        } catch (InterruptedException e) {
+            logger.error("callback invoke fail.",e);
+        }
     }
 
     /**
@@ -85,8 +75,12 @@ public class DispatchCallbackService {
      */
     public void onInvokeSuccess(Message message,CallbackConfig callbackConfig,HttpResponse result){
         //更新分发明细状态
-        CallbackResult callbackResult = this.buildCallbackResult(message,callbackConfig,result);
-        messageService.updateDispatchDetail(callbackResult);
+        try {
+            CallbackResult callbackResult = this.buildCallbackResult(message,callbackConfig,result);
+            messageService.updateDispatchDetail(callbackResult);
+        } catch (IOException e) {
+            logger.error("on invoke success error.",e);
+        }
     }
 
     /**
@@ -137,7 +131,11 @@ public class DispatchCallbackService {
      * @param result
      * @return
      */
-    CallbackResult buildCallbackResult(Message message,CallbackConfig callbackConfig,HttpResponse result){
+    CallbackResult buildCallbackResult(Message message,CallbackConfig callbackConfig,HttpResponse result) throws IOException {
+        HttpEntity entity = result.getEntity();
+        String reponseStr = EntityUtils.toString(entity, "UTF-8");
+        int statusCode = result.getStatusLine().getStatusCode();
+
         CallbackResult callbackResult = new CallbackResult();
         callbackResult.setAppId(message.getAppId());
         callbackResult.setQueueCode(message.getQueueCode());
@@ -156,12 +154,27 @@ public class DispatchCallbackService {
         //调用结束时间
         callbackResult.setRespTime(new Date());
         //调用结果
-        if(result != null && result.getStatusLine() != null && result.getStatusLine().getStatusCode() == 200){
+        if(this.isCallbackSuccess(statusCode,reponseStr)){
             callbackResult.setResult(DispatchStatusEnum.SUCCESS.ordinal());
         }else{
             callbackResult.setResult(DispatchStatusEnum.FAIL.ordinal());
         }
         return callbackResult;
+    }
+
+    /**
+     * 根据返回代码判断是否成功
+     * @param statusCode
+     * @param body
+     * @return
+     */
+    boolean isCallbackSuccess(int statusCode, String body) {
+        if (statusCode == 200 && body != null
+                && (body.trim().equalsIgnoreCase("ok") || body.trim().equalsIgnoreCase("\"ok\""))) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     /**

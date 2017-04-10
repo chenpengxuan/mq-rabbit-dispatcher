@@ -2,6 +2,9 @@ package com.ymatou.mq.rabbit.dispatcher.service;
 
 import com.ymatou.mq.infrastructure.model.CallbackConfig;
 import com.ymatou.mq.infrastructure.model.Message;
+import com.ymatou.mq.rabbit.dispatcher.support.AdjustableSemaphore;
+import com.ymatou.mq.rabbit.dispatcher.support.SemaphorManager;
+import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpPost;
@@ -24,7 +27,24 @@ public class AsyncHttpInvokeService implements FutureCallback<HttpResponse> {
 
     private static final Logger logger = LoggerFactory.getLogger(AsyncHttpInvokeService.class);
 
-    private static CloseableHttpAsyncClient httpAsyncClient;
+    public static final Integer CONN_TIME_OUT = 5000;
+    public static final Integer SOCKET_TIME_OUT = 5000;
+    public static final Integer CONN_REQ_TIME_OUT = 5000;
+
+    private static RequestConfig DEFAULT_REQUEST_CONFIG = RequestConfig.custom()
+            .setConnectTimeout(CONN_TIME_OUT)
+            .setSocketTimeout(SOCKET_TIME_OUT)
+            .setConnectionRequestTimeout(CONN_REQ_TIME_OUT)
+            .build();
+
+    private static  CloseableHttpAsyncClient httpAsyncClient;
+
+    private HttpPost httpPost;
+
+    /**
+     * 信号量
+     */
+    private AdjustableSemaphore semaphore;
 
     private Message message;
 
@@ -36,9 +56,14 @@ public class AsyncHttpInvokeService implements FutureCallback<HttpResponse> {
         this.message = message;
         this.callbackConfig = callbackConfig;
         this.dispatchCallbackService = dispatchCallbackService;
+
         if(httpAsyncClient == null){
             initAsyncHttpClient();
         }
+        httpPost = new HttpPost(callbackConfig.getUrl());
+        this.semaphore = SemaphorManager.get(callbackConfig.getCallbackKey());
+        setContentType(callbackConfig.getContentType());
+        setTimeout(callbackConfig.getTimeout());
     }
 
     /**
@@ -66,9 +91,38 @@ public class AsyncHttpInvokeService implements FutureCallback<HttpResponse> {
     }
 
     /**
+     * 设置Content-Type
+     *
+     * @param contentType
+     * @return
+     */
+    void setContentType(String contentType) {
+        if (StringUtils.isEmpty(contentType)) {
+            httpPost.setHeader("Content-Type", "application/json;charset=utf-8");
+        } else {
+            httpPost.setHeader("Content-Type", String.format("%s;charset=utf-8", contentType));
+        }
+    }
+
+    /**
+     * 设置超时
+     *
+     * @param timeout
+     * @return
+     */
+    void setTimeout(int timeout) {
+        RequestConfig requestConfig = RequestConfig.copy(DEFAULT_REQUEST_CONFIG)
+                // .setConnectionRequestTimeout(timeout)
+                .setSocketTimeout(timeout)
+                .build();
+        httpPost.setConfig(requestConfig);
+    }
+
+
+    /**
      * async send
      */
-    public void send(){
+    public void send() throws InterruptedException{
         send(null);
     }
 
@@ -76,9 +130,16 @@ public class AsyncHttpInvokeService implements FutureCallback<HttpResponse> {
      * async send
      * @param timeout
      */
-    public void send(Long timeout){
+    public void send(Long timeout) throws InterruptedException{
+        if (semaphore != null) {
+            if (timeout != null) {
+                semaphore.tryAcquire(timeout);
+            } else {
+                semaphore.acquire();
+            }
+        }
+
         StringEntity postEntity = new StringEntity(message.getBody(), "UTF-8");
-        HttpPost httpPost = new HttpPost(callbackConfig.getUrl());
         httpPost.setEntity(postEntity);
         httpAsyncClient.execute(httpPost,this);
     }
