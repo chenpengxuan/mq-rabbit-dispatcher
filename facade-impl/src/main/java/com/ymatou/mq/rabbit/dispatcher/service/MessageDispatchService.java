@@ -4,12 +4,14 @@ import com.alibaba.fastjson.JSONObject;
 import com.ymatou.mq.infrastructure.filedb.FileDb;
 import com.ymatou.mq.infrastructure.filedb.FileDbConfig;
 import com.ymatou.mq.infrastructure.filedb.PutExceptionHandler;
+import com.ymatou.mq.infrastructure.model.CallbackConfig;
 import com.ymatou.mq.infrastructure.model.Message;
 import com.ymatou.mq.infrastructure.service.MessageConfigService;
 import com.ymatou.mq.infrastructure.service.MessageService;
 import com.ymatou.mq.infrastructure.util.NetUtil;
 import com.ymatou.mq.rabbit.config.RabbitConfig;
 import com.ymatou.mq.rabbit.dispatcher.config.DispatchConfig;
+import com.ymatou.mq.rabbit.dispatcher.support.SemaphorManager;
 import org.apache.commons.lang3.tuple.Pair;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
@@ -19,6 +21,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import java.util.Date;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 
@@ -36,6 +39,18 @@ public class MessageDispatchService{
 
     @Autowired
     private MessageService messageService;
+
+    @Autowired
+    private MessageConfigService messageConfigService;
+
+    @PostConstruct
+    void init(){
+        //初始化信号量
+        Map<String, CallbackConfig> callbackConfigMap = messageConfigService.getCallbackConfigMap();
+        if(callbackConfigMap != null && callbackConfigMap.size() > 0){
+            SemaphorManager.initSemaphores(callbackConfigMap.values());
+        }
+    }
 
     /**
      * 由接收站直接调用的分发处理接口

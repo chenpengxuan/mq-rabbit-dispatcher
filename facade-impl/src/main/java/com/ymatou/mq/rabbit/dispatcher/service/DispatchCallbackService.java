@@ -64,7 +64,7 @@ public class DispatchCallbackService {
         try {
             new AsyncHttpInvokeService(message,callbackConfig,this).send();
         } catch (InterruptedException e) {
-            logger.error("callback invoke fail.",e);
+            logger.error("callback invoke error.",e);
         }
     }
 

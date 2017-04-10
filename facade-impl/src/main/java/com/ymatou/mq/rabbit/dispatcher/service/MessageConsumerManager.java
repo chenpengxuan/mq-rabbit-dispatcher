@@ -1,21 +1,20 @@
 package com.ymatou.mq.rabbit.dispatcher.service;
 
 import com.ymatou.mq.infrastructure.model.AppConfig;
+import com.ymatou.mq.infrastructure.model.CallbackConfig;
 import com.ymatou.mq.infrastructure.model.QueueConfig;
 import com.ymatou.mq.infrastructure.service.MessageConfigService;
 import com.ymatou.mq.infrastructure.support.ConfigReloadListener;
 import com.ymatou.mq.rabbit.config.RabbitConfig;
 import com.ymatou.mq.rabbit.dispatcher.config.DispatchConfig;
+import com.ymatou.mq.rabbit.dispatcher.support.SemaphorManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 
 /**
  * MQ消息消费管理，如启动、关闭消费等
@@ -43,13 +42,20 @@ public class MessageConsumerManager {
      */
     @PostConstruct
     public void startAll(){
-        //TODO 添加配置变化监听
+        //初始化信号量
+        Map<String, CallbackConfig> callbackConfigMap = messageConfigService.getCallbackConfigMap();
+        if(callbackConfigMap != null && callbackConfigMap.size() > 0){
+            SemaphorManager.initSemaphores(callbackConfigMap.values());
+        }
+
+        //添加配置变化监听 TODO
         messageConfigService.addConfigCacheListener(new ConfigReloadListener(){
             @Override
             public void callback() {
                 //TODO
             }
         });
+
         //启动消费监听
         String groupId = dispatchConfig.getGroupId();
         logger.debug("current group id:{}.",groupId);

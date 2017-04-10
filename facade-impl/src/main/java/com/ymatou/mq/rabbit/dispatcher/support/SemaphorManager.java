@@ -12,6 +12,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -34,7 +35,7 @@ public class SemaphorManager {
     /**
      * 初始化信号量
      */
-    public static void initSemaphores(List<CallbackConfig> callbackConfigList) {
+    public static void initSemaphores(Collection<CallbackConfig> callbackConfigList) {
         if(CollectionUtils.isEmpty(callbackConfigList)){
             logger.error("init semaphores error,callbackConfigList is null.");
             return;
