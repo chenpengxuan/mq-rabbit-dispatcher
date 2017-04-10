@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 
 import javax.annotation.PostConstruct;
 import java.util.*;
@@ -44,15 +45,13 @@ public class MessageConsumerManager {
     public void startAll(){
         //初始化信号量
         Map<String, CallbackConfig> callbackConfigMap = messageConfigService.getCallbackConfigMap();
-        if(callbackConfigMap != null && callbackConfigMap.size() > 0){
-            SemaphorManager.initSemaphores(callbackConfigMap.values());
-        }
+        SemaphorManager.initSemaphores(callbackConfigMap.values());
 
-        //添加配置变化监听 TODO
+        //添加配置变化监听
         messageConfigService.addConfigCacheListener(new ConfigReloadListener(){
             @Override
             public void callback() {
-                //TODO
+                //TODO 处理配置变化
             }
         });
 

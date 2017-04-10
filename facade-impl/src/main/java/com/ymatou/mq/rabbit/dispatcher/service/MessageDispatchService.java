@@ -18,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 
 import javax.annotation.PostConstruct;
 import java.util.Date;
@@ -47,9 +48,7 @@ public class MessageDispatchService{
     void init(){
         //初始化信号量
         Map<String, CallbackConfig> callbackConfigMap = messageConfigService.getCallbackConfigMap();
-        if(callbackConfigMap != null && callbackConfigMap.size() > 0){
-            SemaphorManager.initSemaphores(callbackConfigMap.values());
-        }
+        SemaphorManager.initSemaphores(callbackConfigMap.values());
     }
 
     /**

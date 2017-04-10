@@ -234,12 +234,13 @@ public class DispatchCallbackService {
     }
 
     /**
-     * 生成补单id TODO
+     * 生成补单id
      * @param message
      * @param callbackConfig
      * @return
      */
     String buildCompensateId(Message message,CallbackConfig callbackConfig){
+        //TODO 确认补单id规则
         return String.format("%s_%s",message.getId(),callbackConfig.getCallbackKey());
     }
 
