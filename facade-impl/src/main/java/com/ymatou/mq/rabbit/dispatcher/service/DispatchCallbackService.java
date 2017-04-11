@@ -93,6 +93,7 @@ public class DispatchCallbackService {
         if(isNeedInsertCompensate){//若需要插补单
             //插补单
             MessageCompensate messageCompensate = this.buildCompensate(message,callbackConfig);
+            //TODO 补充补单字段
             messageService.insertCompensate(messageCompensate);
 
             //更新分发明细状态

@@ -12,7 +12,9 @@ dependencies {
 //	compile(project(":mq-infrastructure"))
 	compile(project(":facade-interface"))
 
-	compile "com.alibaba:dubbo:${dubboxVersion}"
+	compile ("com.alibaba:dubbo:${dubboxVersion}"){
+		exclude group: "org.springframework"
+	}
 
 	compile "com.ymatou.resteasy:resteasy-jaxrs:${resteasyJaxrsVersion}"
 	compile "com.ymatou.resteasy:resteasy-client:${resteasyJaxrsVersion}"

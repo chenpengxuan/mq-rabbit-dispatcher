@@ -124,12 +124,12 @@ public class MessageConsumer implements Consumer{
         } finally {
             //TODO 处理ack deliveryTag异常问题
 //            if(RabbitConstants.CLUSTER_MASTER.equals(cluster)){
-//                //TODO 更新消息状态为consumed
 //                logger.info("masterChannel status:{}",masterChannel.isOpen());
 //                masterChannel.basicAck(envelope.getDeliveryTag(),false);
 //            }else{
 //                slaveChannel.basicAck(envelope.getDeliveryTag(),false);
 //            }
+            //TODO 更新消息状态为consumed
         }
     }
 
