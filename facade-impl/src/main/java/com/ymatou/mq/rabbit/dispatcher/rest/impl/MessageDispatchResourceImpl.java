@@ -22,7 +22,7 @@ import org.springframework.stereotype.Component;
 import com.alibaba.dubbo.config.annotation.Service;
 
 
-@Component("demoResource")
+@Component("messageDispatchResource")
 @Produces({"application/json; charset=UTF-8"})
 @Service(protocol = "rest")
 @Path("/{api:(?i:api)}")

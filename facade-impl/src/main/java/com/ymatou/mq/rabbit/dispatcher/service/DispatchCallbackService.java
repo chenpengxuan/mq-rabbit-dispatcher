@@ -220,17 +220,17 @@ public class DispatchCallbackService {
      * @return
      */
     MessageCompensate buildCompensate(Message message,CallbackConfig callbackConfig){
-        //TODO
         MessageCompensate messageCompensate = new MessageCompensate();
         messageCompensate.setId(ObjectId.get().toString());
+        messageCompensate.setMsgId(message.getId());
+        messageCompensate.setBizId(message.getBizId());
         messageCompensate.setAppId(message.getAppId());
         messageCompensate.setQueueCode(message.getQueueCode());
-        messageCompensate.setMsgId(message.getId());
+        messageCompensate.setConsumerId(callbackConfig.getCallbackKey());
         messageCompensate.setSource(CompensateFromEnum.DISPATCH.ordinal());
         messageCompensate.setStatus(CompensateStatusEnum.INIT.ordinal());
-        //TODO 时间
         messageCompensate.setCreateTime(new Date());
-        //TODO 次数
+        //TODO 下次补单时间
         return messageCompensate;
     }
 
