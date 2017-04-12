@@ -10,6 +10,7 @@ package com.ymatou.mq.rabbit.dispatcher.rest.impl;
 import javax.ws.rs.*;
 
 import com.ymatou.mq.infrastructure.model.Message;
+import com.ymatou.mq.rabbit.dispatcher.facade.MessageDispatchFacade;
 import com.ymatou.mq.rabbit.dispatcher.facade.model.DispatchMessageReq;
 import com.ymatou.mq.rabbit.dispatcher.facade.model.DispatchMessageResp;
 import com.ymatou.mq.rabbit.dispatcher.rest.MessageDispatchResource;
@@ -31,19 +32,13 @@ public class MessageDispatchResourceImpl implements MessageDispatchResource {
     public static final Logger logger = LoggerFactory.getLogger(MessageDispatchResourceImpl.class);
 
     @Autowired
-    private MessageDispatchService messageDispatchService;
+    private MessageDispatchFacade messageDispatchFacade;
 
-    @GET
+    @POST
     @Path("/{dispatch:(?i:dispatch)}")
     @Override
     public DispatchMessageResp dispatch(DispatchMessageReq req){
-        Message message = new Message();
-
-        //TODO
-        messageDispatchService.dispatch(message);
-
-        DispatchMessageResp resp = new DispatchMessageResp();
-        return resp;
+        return messageDispatchFacade.dispatch(req);
     }
 
 }

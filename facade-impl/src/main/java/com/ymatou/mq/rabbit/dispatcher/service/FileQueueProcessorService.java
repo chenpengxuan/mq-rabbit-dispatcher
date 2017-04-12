@@ -5,6 +5,7 @@ import java.util.function.Function;
 
 import javax.annotation.PostConstruct;
 
+import com.ymatou.mq.infrastructure.service.MessageService;
 import com.ymatou.mq.rabbit.dispatcher.config.FileDbConf;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
@@ -32,6 +33,9 @@ public class FileQueueProcessorService implements Function<Pair<String, String>,
 
     @Autowired
     private DispatchCallbackService dispatchCallbackService;
+
+    @Autowired
+    private MessageService messageService;
 
     public FileDb getFileDb() {
         return fileDb;
@@ -80,8 +84,11 @@ public class FileQueueProcessorService implements Function<Pair<String, String>,
     public Boolean apply(Pair<String, String> pair) {
         Boolean success = Boolean.FALSE;
         try {
+            //消费数据
             Message message = Message.fromJson(pair.getValue());
-            //消费数据，进行回调 TODO 操作结果
+            //插消息
+            messageService.saveMessage(message);
+            //进行回调
             dispatchCallbackService.invoke(message);
         } catch (Exception e) {
             logger.error("save message to mongo error", e);

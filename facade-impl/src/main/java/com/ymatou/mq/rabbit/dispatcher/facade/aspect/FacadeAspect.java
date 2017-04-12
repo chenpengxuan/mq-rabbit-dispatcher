@@ -72,10 +72,7 @@ public class FacadeAspect {
         // log日志配有"logPrefix"占位符
         MDC.put(Constants.LOG_PREFIX, getRequestFlag(req));
 
-        //FIXME:这个应用，请求设为debug级别？
-        if (logger.isInfoEnabled()) {
-            logger.info("Recv:" + req);
-        }
+        logger.debug("Recv:" + req);
 
         Object resp = null;
 
@@ -95,10 +92,8 @@ public class FacadeAspect {
             resp = buildErrorResponse(joinPoint, ErrorCode.UNKNOWN, e.getLocalizedMessage());
             logger.error("Unknown error in executing request:{}", req, e);
         } finally {
-            //FIXME:对这个应用，响应设为debug级别?
-            if (logger.isInfoEnabled()) {
-                logger.info("Resp:" + resp);
-            }
+            logger.debug("Resp:" + resp);
+
             long consumedTime = System.currentTimeMillis() - startTime;
             if (consumedTime > 300) {
                 logger.warn("slow query gt 300ms({}ms). Req:{}", consumedTime, req);

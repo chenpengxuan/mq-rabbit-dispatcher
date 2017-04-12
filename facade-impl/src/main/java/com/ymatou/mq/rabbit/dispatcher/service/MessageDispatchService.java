@@ -6,11 +6,14 @@ import com.ymatou.mq.infrastructure.filedb.FileDbConfig;
 import com.ymatou.mq.infrastructure.filedb.PutExceptionHandler;
 import com.ymatou.mq.infrastructure.model.CallbackConfig;
 import com.ymatou.mq.infrastructure.model.Message;
+import com.ymatou.mq.infrastructure.model.QueueConfig;
 import com.ymatou.mq.infrastructure.service.MessageConfigService;
 import com.ymatou.mq.infrastructure.service.MessageService;
 import com.ymatou.mq.infrastructure.util.NetUtil;
 import com.ymatou.mq.rabbit.config.RabbitConfig;
 import com.ymatou.mq.rabbit.dispatcher.config.DispatchConfig;
+import com.ymatou.mq.rabbit.dispatcher.facade.model.BizException;
+import com.ymatou.mq.rabbit.dispatcher.facade.model.ErrorCode;
 import com.ymatou.mq.rabbit.dispatcher.support.SemaphorManager;
 import org.apache.commons.lang3.tuple.Pair;
 import org.bson.types.ObjectId;
@@ -56,7 +59,9 @@ public class MessageDispatchService{
      * @param message
      */
     public boolean dispatch(Message message){
-        //TODO 与recv 统一返回值还是异常?
+        //验证队列有效性
+        this.validQueue(message.getAppId(),message.getQueueCode());
+
         //写fileDb
         boolean result = fileQueueProcessorService.saveMessageToFileDb(message);
         //若写失败，则同步写mongo
@@ -69,6 +74,16 @@ public class MessageDispatchService{
             }
         }
         return result;
+    }
+
+    /**
+     * 验证queuCode有效性
+     */
+    void validQueue(String appId,String queueCode){
+        QueueConfig queueConfig = messageConfigService.getQueueConfig(appId, queueCode);
+        if(queueConfig == null){
+            throw new BizException(ErrorCode.QUEUE_CONFIG_NOT_EXIST,String.format("appId:[%s],queueCode:[%s] not exist.",appId, queueCode));
+        }
     }
 
 }

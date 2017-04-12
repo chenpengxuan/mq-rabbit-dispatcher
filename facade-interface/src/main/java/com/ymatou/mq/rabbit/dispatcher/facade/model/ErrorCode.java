@@ -17,8 +17,10 @@ public enum ErrorCode {
     // 明确知道失败原因，但客户端不关心，统一返回请求处理失败
     FAIL(198, "请求处理失败"),
 
+    UNKNOWN(199, "未知错误，系统异常"),
+
     // 请求处理过程中，出现未知错误
-    UNKNOWN(199, "未知错误，系统异常"),;
+    QUEUE_CONFIG_NOT_EXIST(1001,"队列配置不存在.");
 
     private int code;
 
