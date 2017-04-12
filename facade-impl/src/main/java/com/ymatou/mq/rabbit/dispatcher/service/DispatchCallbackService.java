@@ -7,7 +7,6 @@ import com.ymatou.mq.infrastructure.support.enums.CallbackFromEnum;
 import com.ymatou.mq.infrastructure.support.enums.CompensateFromEnum;
 import com.ymatou.mq.infrastructure.support.enums.CompensateStatusEnum;
 import com.ymatou.mq.infrastructure.support.enums.DispatchStatusEnum;
-import com.ymatou.mq.rabbit.dispatcher.support.AdjustableSemaphore;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.util.EntityUtils;
@@ -63,8 +62,8 @@ public class DispatchCallbackService {
         //async http send
         try {
             new AsyncHttpInvokeService(message,callbackConfig,this).send();
-        } catch (InterruptedException e) {
-            logger.error("callback invoke error.",e);
+        } catch (Exception e) {
+            logger.error("doInvokeOne error.",e);
         }
     }
 
@@ -78,8 +77,8 @@ public class DispatchCallbackService {
             //更新分发明细状态
             CallbackResult callbackResult = this.buildCallbackResult(message,callbackConfig,result);
             messageService.updateDispatchDetail(callbackResult);
-        } catch (IOException e) {
-            logger.error("on invoke success error.",e);
+        } catch (Exception e) {
+            logger.error("onInvokeSuccess proccess error.",e);
         }
     }
 
@@ -89,20 +88,24 @@ public class DispatchCallbackService {
      * @param callbackConfig
      */
     public void onInvokeFail(Message message,CallbackConfig callbackConfig,Exception ex){
-        boolean isNeedInsertCompensate = this.isNeedInsertCompensate(callbackConfig);
-        if(isNeedInsertCompensate){//若需要插补单
-            //插补单
-            MessageCompensate messageCompensate = this.buildCompensate(message,callbackConfig);
-            //TODO 补充补单字段
-            messageService.insertCompensate(messageCompensate);
+        try {
+            boolean isNeedInsertCompensate = this.isNeedInsertCompensate(callbackConfig);
+            if(isNeedInsertCompensate){//若需要插补单
+                //插补单
+                MessageCompensate messageCompensate = this.buildCompensate(message,callbackConfig);
+                //TODO 补充补单字段
+                messageService.insertCompensate(messageCompensate);
 
-            //更新分发明细状态
-            CallbackResult callbackResult = this.buildCallbackResult(message,callbackConfig,ex,true);
-            messageService.updateDispatchDetail(callbackResult);
-        }else{//若不需要插补单
-            //更新分发明细状态
-            CallbackResult callbackResult = this.buildCallbackResult(message,callbackConfig,ex,false);
-            messageService.updateDispatchDetail(callbackResult);
+                //更新分发明细状态
+                CallbackResult callbackResult = this.buildCallbackResult(message,callbackConfig,ex,true);
+                messageService.updateDispatchDetail(callbackResult);
+            }else{//若不需要插补单
+                //更新分发明细状态
+                CallbackResult callbackResult = this.buildCallbackResult(message,callbackConfig,ex,false);
+                messageService.updateDispatchDetail(callbackResult);
+            }
+        } catch (Exception e) {
+            logger.error("onInvokeFail proccess error.",e);
         }
     }
 
@@ -157,6 +160,7 @@ public class DispatchCallbackService {
         callbackResult.setQueueCode(message.getQueueCode());
         callbackResult.setConsumerId(callbackConfig.getCallbackKey());
         callbackResult.setMsgId(message.getId());
+        callbackResult.setBizId(message.getBizId());
         //来源
         callbackResult.setFrom(CallbackFromEnum.DISPATCH.ordinal());
         //url
@@ -171,9 +175,9 @@ public class DispatchCallbackService {
         callbackResult.setRespTime(new Date());
         //调用结果
         if(this.isCallbackSuccess(statusCode,reponse)){
-            callbackResult.setResult(DispatchStatusEnum.SUCCESS.ordinal());
+            callbackResult.setStatus(DispatchStatusEnum.SUCCESS.ordinal());
         }else{
-            callbackResult.setResult(DispatchStatusEnum.FAIL.ordinal());
+            callbackResult.setStatus(DispatchStatusEnum.FAIL.ordinal());
         }
         return callbackResult;
     }
@@ -192,6 +196,7 @@ public class DispatchCallbackService {
         callbackResult.setQueueCode(message.getQueueCode());
         callbackResult.setConsumerId(callbackConfig.getCallbackKey());
         callbackResult.setMsgId(message.getId());
+        callbackResult.setBizId(message.getBizId());
         //来源
         callbackResult.setFrom(CallbackFromEnum.DISPATCH.ordinal());
         //url
@@ -206,9 +211,9 @@ public class DispatchCallbackService {
         callbackResult.setRespTime(new Date());
         //调用结果
         if(isNeedCompensate){
-            callbackResult.setResult(DispatchStatusEnum.COMPENSATE.ordinal());
+            callbackResult.setStatus(DispatchStatusEnum.COMPENSATE.ordinal());
         }else{
-            callbackResult.setResult(DispatchStatusEnum.FAIL.ordinal());
+            callbackResult.setStatus(DispatchStatusEnum.FAIL.ordinal());
         }
         return callbackResult;
     }

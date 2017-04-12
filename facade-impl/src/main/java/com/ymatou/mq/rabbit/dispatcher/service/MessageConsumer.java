@@ -78,15 +78,14 @@ public class MessageConsumer implements Consumer{
                 }
             });
 
-            ChannelWrapper slaveChannelWrapper = RabbitChannelFactory.createChannelWrapper(rabbitConfig);
-            slaveChannel = slaveChannelWrapper.getChannel();
+//            ChannelWrapper slaveChannelWrapper = RabbitChannelFactory.createChannelWrapper(rabbitConfig);
+//            slaveChannel = slaveChannelWrapper.getChannel();
 
-            //ConumserHandler conumserHandler = new ConumserHandler();
             //TODO 设置ack为false，处理deliveryTag异常问题
             masterChannel.basicConsume(this.queueCode,true,this);
-            slaveChannel.basicConsume(this.queueCode,true,this);
-        } catch (IOException e) {
-            logger.error("basic consume error,queueCode:{}.",queueCode);
+//            slaveChannel.basicConsume(this.queueCode,true,this);
+        } catch (Exception e) {
+            logger.error("basic consume error,queueCode:{}.",queueCode,e);
         }
 
     }
@@ -102,9 +101,6 @@ public class MessageConsumer implements Consumer{
     public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
         logger.info("consumerTag:{},envelope:{},properties:{}.",consumerTag,envelope,properties);
 
-        //获取消息来源cluster
-        String cluster = properties.getType();
-
         try {
             Message message = new Message();
             message.setAppId(appId);
@@ -116,20 +112,21 @@ public class MessageConsumer implements Consumer{
             String bizId = properties.getCorrelationId();
             message.setBizId(bizId);
 
-            MDC.put("logPrefix", "MessageConsumer|" + bizId);
+            //MDC.put("logPrefix", "MessageConsumer|" + bizId);
 
             dispatchCallbackService.invoke(message);
         } catch (Exception e) {
             logger.error("dispatch callback error,consumerTag:{},envelope:{},properties:{}.",consumerTag,envelope,properties,e);
         } finally {
             //TODO 处理ack deliveryTag异常问题
+            //TODO 更新消息状态为consumed
+            String cluster = properties.getType();
 //            if(RabbitConstants.CLUSTER_MASTER.equals(cluster)){
 //                logger.info("masterChannel status:{}",masterChannel.isOpen());
 //                masterChannel.basicAck(envelope.getDeliveryTag(),false);
 //            }else{
 //                slaveChannel.basicAck(envelope.getDeliveryTag(),false);
 //            }
-            //TODO 更新消息状态为consumed
         }
     }
 

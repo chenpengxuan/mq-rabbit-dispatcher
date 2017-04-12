@@ -91,9 +91,9 @@ allprojects{
 //        !--对外暴露的API，需发布到maven私服，供客户端引用。版本会不断升级。 --
 //        !--开发联调，API还未稳定，需要频繁发布时，版本号变更为1.0.0.SNAPSHOT。 --
 //        !--API最终确定后，版本号修改为“1.0.0YyyyMmDd”并release。客户端最终必须都是使用release版 --
-        mqInfrastructureVersion = "1.0.0.2017041101"
-        mqRabbitCommonVersion = "1.0.0.2017041101"
-        mqRabbitDispatcherFacadeVersion = "1.0.0.2017041101"
+        mqInfrastructureVersion = "1.0.0.2017041201"
+        mqRabbitCommonVersion = "1.0.0.2017041201"
+        mqRabbitDispatcherFacadeVersion = "1.0.0.2017041201"
     }
 
     repositories {

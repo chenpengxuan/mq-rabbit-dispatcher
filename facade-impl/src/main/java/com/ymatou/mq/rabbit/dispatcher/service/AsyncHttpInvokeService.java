@@ -131,13 +131,13 @@ public class AsyncHttpInvokeService implements FutureCallback<HttpResponse> {
      * @param timeout
      */
     public void send(Long timeout) throws InterruptedException{
-        if (semaphore != null) {
-            if (timeout != null) {
-                semaphore.tryAcquire(timeout);
-            } else {
-                semaphore.acquire();
-            }
-        }
+//        if (semaphore != null) {
+//            if (timeout != null) {
+//                semaphore.tryAcquire(timeout);
+//            } else {
+//                semaphore.acquire();
+//            }
+//        }
 
         StringEntity postEntity = new StringEntity(message.getBody(), "UTF-8");
         httpPost.setEntity(postEntity);
