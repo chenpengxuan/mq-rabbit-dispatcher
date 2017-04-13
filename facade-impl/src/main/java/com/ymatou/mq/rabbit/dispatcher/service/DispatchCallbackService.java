@@ -226,28 +226,18 @@ public class DispatchCallbackService {
      */
     MessageCompensate buildCompensate(Message message,CallbackConfig callbackConfig){
         MessageCompensate messageCompensate = new MessageCompensate();
-        messageCompensate.setId(ObjectId.get().toString());
+        messageCompensate.setId(String.format("%s_%s",message.getId(),callbackConfig.getCallbackKey()));
         messageCompensate.setMsgId(message.getId());
-        messageCompensate.setBizId(message.getBizId());
         messageCompensate.setAppId(message.getAppId());
         messageCompensate.setQueueCode(message.getQueueCode());
         messageCompensate.setConsumerId(callbackConfig.getCallbackKey());
+        messageCompensate.setBizId(message.getBizId());
+        messageCompensate.setBody(message.getBody());
         messageCompensate.setSource(CompensateFromEnum.DISPATCH.ordinal());
         messageCompensate.setStatus(CompensateStatusEnum.INIT.ordinal());
         messageCompensate.setCreateTime(new Date());
         //TODO 下次补单时间
         return messageCompensate;
-    }
-
-    /**
-     * 生成补单id
-     * @param message
-     * @param callbackConfig
-     * @return
-     */
-    String buildCompensateId(Message message,CallbackConfig callbackConfig){
-        //TODO 确认补单id规则
-        return String.format("%s_%s",message.getId(),callbackConfig.getCallbackKey());
     }
 
 }
