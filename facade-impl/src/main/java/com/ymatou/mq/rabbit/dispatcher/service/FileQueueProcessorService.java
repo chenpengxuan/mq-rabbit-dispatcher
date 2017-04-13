@@ -4,6 +4,7 @@ import java.util.Optional;
 import java.util.function.Function;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 
 import com.ymatou.mq.infrastructure.service.MessageService;
 import com.ymatou.mq.rabbit.dispatcher.config.FileDbConf;
@@ -100,5 +101,10 @@ public class FileQueueProcessorService implements Function<Pair<String, String>,
     @Override
     public void handleException(String key, String value, Optional<Throwable> throwable) {
         //同步保存 不用处理
+    }
+
+    @PreDestroy
+    public void destroy(){
+        fileDb.close();
     }
 }
