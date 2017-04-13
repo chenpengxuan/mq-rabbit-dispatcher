@@ -5,9 +5,10 @@ import com.ymatou.mq.infrastructure.model.CallbackConfig;
 import com.ymatou.mq.infrastructure.model.QueueConfig;
 import com.ymatou.mq.infrastructure.service.MessageConfigService;
 import com.ymatou.mq.infrastructure.support.ConfigReloadListener;
+import com.ymatou.mq.infrastructure.support.SemaphorManager;
 import com.ymatou.mq.rabbit.config.RabbitConfig;
 import com.ymatou.mq.rabbit.dispatcher.config.DispatchConfig;
-import com.ymatou.mq.rabbit.dispatcher.support.SemaphorManager;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

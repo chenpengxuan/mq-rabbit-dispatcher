@@ -9,12 +9,13 @@ import com.ymatou.mq.infrastructure.model.Message;
 import com.ymatou.mq.infrastructure.model.QueueConfig;
 import com.ymatou.mq.infrastructure.service.MessageConfigService;
 import com.ymatou.mq.infrastructure.service.MessageService;
+import com.ymatou.mq.infrastructure.support.SemaphorManager;
 import com.ymatou.mq.infrastructure.util.NetUtil;
 import com.ymatou.mq.rabbit.config.RabbitConfig;
 import com.ymatou.mq.rabbit.dispatcher.config.DispatchConfig;
 import com.ymatou.mq.rabbit.dispatcher.facade.model.BizException;
 import com.ymatou.mq.rabbit.dispatcher.facade.model.ErrorCode;
-import com.ymatou.mq.rabbit.dispatcher.support.SemaphorManager;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;

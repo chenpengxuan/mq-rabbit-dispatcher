@@ -1,6 +1,8 @@
 package com.ymatou.mq.rabbit.dispatcher.service;
 
 import com.ymatou.mq.infrastructure.model.*;
+import com.ymatou.mq.infrastructure.service.AsyncHttpInvokeService;
+import com.ymatou.mq.infrastructure.service.HttpInvokeResultService;
 import com.ymatou.mq.infrastructure.service.MessageConfigService;
 import com.ymatou.mq.infrastructure.service.MessageService;
 import com.ymatou.mq.infrastructure.support.enums.CallbackFromEnum;
@@ -26,7 +28,7 @@ import java.util.List;
  * Created by zhangzhihua on 2017/4/1.
  */
 @Component
-public class DispatchCallbackService {
+public class DispatchCallbackService implements HttpInvokeResultService {
 
     private static final Logger logger = LoggerFactory.getLogger(DispatchCallbackService.class);
 
@@ -72,6 +74,7 @@ public class DispatchCallbackService {
      * @param message
      * @param callbackConfig
      */
+    @Override
     public void onInvokeSuccess(Message message,CallbackConfig callbackConfig,HttpResponse result){
         try {
             //更新分发明细状态
@@ -87,7 +90,8 @@ public class DispatchCallbackService {
      * @param message
      * @param callbackConfig
      */
-    public void onInvokeFail(Message message,CallbackConfig callbackConfig,Exception ex){
+    @Override
+    public void onInvokeFail(Message message,CallbackConfig callbackConfig,HttpResponse result,Exception ex){
         try {
             boolean isNeedInsertCompensate = this.isNeedInsertCompensate(callbackConfig);
             if(isNeedInsertCompensate){//若需要插补单
