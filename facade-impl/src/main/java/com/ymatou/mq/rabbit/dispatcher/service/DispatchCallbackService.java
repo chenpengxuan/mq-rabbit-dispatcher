@@ -101,11 +101,11 @@ public class DispatchCallbackService implements HttpInvokeResultService {
                 messageService.insertCompensate(messageCompensate);
 
                 //更新分发明细状态
-                CallbackResult callbackResult = this.buildCallbackResult(message,callbackConfig,ex,true);
+                CallbackResult callbackResult = this.buildCallbackResult(message,callbackConfig,result,ex,true);
                 messageService.updateDispatchDetail(callbackResult);
             }else{//若不需要插补单
                 //更新分发明细状态
-                CallbackResult callbackResult = this.buildCallbackResult(message,callbackConfig,ex,false);
+                CallbackResult callbackResult = this.buildCallbackResult(message,callbackConfig,result,ex,false);
                 messageService.updateDispatchDetail(callbackResult);
             }
         } catch (Exception e) {
@@ -178,11 +178,7 @@ public class DispatchCallbackService implements HttpInvokeResultService {
         //响应时间
         callbackResult.setRespTime(new Date());
         //调用结果
-        if(this.isCallbackSuccess(statusCode,reponse)){
-            callbackResult.setStatus(DispatchStatusEnum.SUCCESS.ordinal());
-        }else{
-            callbackResult.setStatus(DispatchStatusEnum.FAIL.ordinal());
-        }
+        callbackResult.setStatus(DispatchStatusEnum.SUCCESS.ordinal());
         return callbackResult;
     }
 
@@ -194,7 +190,7 @@ public class DispatchCallbackService implements HttpInvokeResultService {
      * @param isNeedCompensate
      * @return
      */
-    CallbackResult buildCallbackResult(Message message,CallbackConfig callbackConfig,Exception ex,boolean isNeedCompensate){
+    CallbackResult buildCallbackResult(Message message,CallbackConfig callbackConfig,HttpResponse result,Exception ex,boolean isNeedCompensate){
         CallbackResult callbackResult = new CallbackResult();
         callbackResult.setAppId(message.getAppId());
         callbackResult.setQueueCode(message.getQueueCode());
@@ -208,7 +204,14 @@ public class DispatchCallbackService implements HttpInvokeResultService {
         //请求报文
         callbackResult.setRequest(message.getBody());
         //响应报文
-        callbackResult.setResponse(ex != null?ex.getLocalizedMessage():"");
+        if(result != null){
+            //TODO 细化result输出
+            callbackResult.setResponse(result.toString());
+        }else if(ex != null){
+            callbackResult.setResponse(ex != null?ex.getLocalizedMessage():"");
+        }else{
+            callbackResult.setResponse("unknow response.");
+        }
         //请求时间
         callbackResult.setReqTime(message.getCreateTime());
         //响应时间
