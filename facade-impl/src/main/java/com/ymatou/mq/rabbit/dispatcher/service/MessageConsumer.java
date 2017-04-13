@@ -64,12 +64,10 @@ public class MessageConsumer implements Consumer{
      */
     public void start(){
         try {
-            //创建conn指定线程池数量
-            //TODO 创建channel 不绑定线程
+            //master channel
             //TODO 可调整conn/channel对应的数量关系
-            ChannelWrapper masterChannelWrapper = RabbitChannelFactory.createChannelWrapper(rabbitConfig);
+            ChannelWrapper masterChannelWrapper = RabbitChannelFactory.createChannelWrapper(RabbitConstants.CLUSTER_MASTER,rabbitConfig);
             masterChannel = masterChannelWrapper.getChannel();
-
             //TODO 处理channel关闭事件
             masterChannel.addShutdownListener(new ShutdownListener() {
                 @Override
@@ -77,13 +75,18 @@ public class MessageConsumer implements Consumer{
                     logger.error("shutdownCompleted,cause:" + cause);
                 }
             });
+            masterChannel.basicConsume(this.queueCode,false,this);
 
-//            ChannelWrapper slaveChannelWrapper = RabbitChannelFactory.createChannelWrapper(rabbitConfig);
-//            slaveChannel = slaveChannelWrapper.getChannel();
-
-            //TODO 设置ack为false，处理deliveryTag异常问题
-            masterChannel.basicConsume(this.queueCode,true,this);
-//            slaveChannel.basicConsume(this.queueCode,true,this);
+            //slave channel
+            ChannelWrapper slaveChannelWrapper = RabbitChannelFactory.createChannelWrapper(RabbitConstants.CLUSTER_SLAVE,rabbitConfig);
+            slaveChannel = slaveChannelWrapper.getChannel();
+            slaveChannel.addShutdownListener(new ShutdownListener() {
+                @Override
+                public void shutdownCompleted(ShutdownSignalException cause) {
+                    logger.error("shutdownCompleted,cause:" + cause);
+                }
+            });
+            slaveChannel.basicConsume(this.queueCode,false,this);
         } catch (Exception e) {
             logger.error("basic consume error,queueCode:{}.",queueCode,e);
         }
@@ -118,15 +121,14 @@ public class MessageConsumer implements Consumer{
         } catch (Exception e) {
             logger.error("dispatch callback error,consumerTag:{},envelope:{},properties:{}.",consumerTag,envelope,properties,e);
         } finally {
-            //TODO 处理ack deliveryTag异常问题
             //TODO 更新消息状态为consumed
             String cluster = properties.getType();
-//            if(RabbitConstants.CLUSTER_MASTER.equals(cluster)){
-//                logger.info("masterChannel status:{}",masterChannel.isOpen());
-//                masterChannel.basicAck(envelope.getDeliveryTag(),false);
-//            }else{
-//                slaveChannel.basicAck(envelope.getDeliveryTag(),false);
-//            }
+            if(RabbitConstants.CLUSTER_MASTER.equals(cluster)){
+                logger.info("masterChannel status:{}",masterChannel.isOpen());
+                masterChannel.basicAck(envelope.getDeliveryTag(),false);
+            }else{
+                slaveChannel.basicAck(envelope.getDeliveryTag(),false);
+            }
         }
     }
 
