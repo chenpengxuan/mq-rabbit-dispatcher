@@ -9,6 +9,7 @@ import com.ymatou.mq.infrastructure.support.enums.CallbackFromEnum;
 import com.ymatou.mq.infrastructure.support.enums.CompensateFromEnum;
 import com.ymatou.mq.infrastructure.support.enums.CompensateStatusEnum;
 import com.ymatou.mq.infrastructure.support.enums.DispatchStatusEnum;
+import com.ymatou.mq.infrastructure.util.MessageHelper;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -64,7 +65,8 @@ public class DispatchCallbackService implements HttpInvokeResultService {
     void doInvokeOne(Message message,CallbackConfig callbackConfig,Long timeout){
         //async http send
         try {
-            new AsyncHttpInvokeService(message,callbackConfig,this).send();
+
+            new AsyncHttpInvokeService(MessageHelper.fromMessage(message),callbackConfig,this).send();
         } catch (Exception e) {
             logger.error("doInvokeOne error.",e);
         }
@@ -76,10 +78,10 @@ public class DispatchCallbackService implements HttpInvokeResultService {
      * @param callbackConfig
      */
     @Override
-    public void onInvokeSuccess(Message message,CallbackConfig callbackConfig,String result){
+    public void onInvokeSuccess(CallbackMessage message,CallbackConfig callbackConfig){
         try {
             //更新分发明细状态
-            CallbackResult callbackResult = this.buildCallbackResult(message,callbackConfig,result);
+            CallbackResult callbackResult = this.buildCallbackResult(message,callbackConfig,message.getResponse());
             messageService.updateDispatchDetail(callbackResult);
         } catch (Exception e) {
             logger.error("onInvokeSuccess proccess error.",e);
@@ -92,7 +94,7 @@ public class DispatchCallbackService implements HttpInvokeResultService {
      * @param callbackConfig
      */
     @Override
-    public void onInvokeFail(Message message,CallbackConfig callbackConfig,String result,Exception ex){
+    public void onInvokeFail(CallbackMessage message,CallbackConfig callbackConfig){
         try {
             boolean isNeedInsertCompensate = this.isNeedInsertCompensate(callbackConfig);
             if(isNeedInsertCompensate){//若需要插补单
@@ -102,11 +104,11 @@ public class DispatchCallbackService implements HttpInvokeResultService {
                 messageService.insertCompensate(messageCompensate);
 
                 //更新分发明细状态
-                CallbackResult callbackResult = this.buildCallbackResult(message,callbackConfig,result,ex,true);
+                CallbackResult callbackResult = this.buildCallbackResult(message,callbackConfig,true);
                 messageService.updateDispatchDetail(callbackResult);
             }else{//若不需要插补单
                 //更新分发明细状态
-                CallbackResult callbackResult = this.buildCallbackResult(message,callbackConfig,result,ex,false);
+                CallbackResult callbackResult = this.buildCallbackResult(message,callbackConfig,false);
                 messageService.updateDispatchDetail(callbackResult);
             }
         } catch (Exception e) {
@@ -155,7 +157,7 @@ public class DispatchCallbackService implements HttpInvokeResultService {
      * @param result
      * @return
      */
-    CallbackResult buildCallbackResult(Message message,CallbackConfig callbackConfig,String result) throws IOException {
+    CallbackResult buildCallbackResult(CallbackMessage message,CallbackConfig callbackConfig,String result) throws IOException {
         CallbackResult callbackResult = new CallbackResult();
         callbackResult.setAppId(message.getAppId());
         callbackResult.setQueueCode(message.getQueueCode());
@@ -183,11 +185,10 @@ public class DispatchCallbackService implements HttpInvokeResultService {
      * 构造回调结果，响应异常或无响应的
      * @param message
      * @param callbackConfig
-     * @param ex
      * @param isNeedCompensate
      * @return
      */
-    CallbackResult buildCallbackResult(Message message,CallbackConfig callbackConfig,String result,Exception ex,boolean isNeedCompensate){
+    CallbackResult buildCallbackResult(CallbackMessage message,CallbackConfig callbackConfig,boolean isNeedCompensate){
         CallbackResult callbackResult = new CallbackResult();
         callbackResult.setAppId(message.getAppId());
         callbackResult.setQueueCode(message.getQueueCode());
@@ -200,15 +201,16 @@ public class DispatchCallbackService implements HttpInvokeResultService {
         callbackResult.setUrl(callbackConfig.getUrl());
         //请求报文
         callbackResult.setRequest(message.getBody());
-        //响应报文
-        if(StringUtils.isNotEmpty(result)){
-            //TODO 细化result输出
-            callbackResult.setResponse(result);
-        }else if(ex != null){
-            callbackResult.setResponse(ex != null?ex.getLocalizedMessage():"");
-        }else{
-            callbackResult.setResponse("unknow response.");
-        }
+//        //响应报文
+//        if(StringUtils.isNotEmpty(result)){
+//            //TODO 细化result输出
+//            callbackResult.setResponse(result);
+//        }else if(ex != null){
+//            callbackResult.setResponse(ex != null?ex.getLocalizedMessage():"");
+//        }else{
+//            callbackResult.setResponse("unknow response.");
+//        }
+        callbackResult.setResponse(message.getResponse());
         //请求时间
         callbackResult.setReqTime(message.getCreateTime());
         //响应时间
@@ -228,7 +230,7 @@ public class DispatchCallbackService implements HttpInvokeResultService {
      * @param callbackConfig
      * @return
      */
-    MessageCompensate buildCompensate(Message message,CallbackConfig callbackConfig){
+    MessageCompensate buildCompensate(CallbackMessage message,CallbackConfig callbackConfig){
         MessageCompensate messageCompensate = new MessageCompensate();
         messageCompensate.setId(String.format("%s_%s",message.getId(),callbackConfig.getCallbackKey()));
         messageCompensate.setMsgId(message.getId());
