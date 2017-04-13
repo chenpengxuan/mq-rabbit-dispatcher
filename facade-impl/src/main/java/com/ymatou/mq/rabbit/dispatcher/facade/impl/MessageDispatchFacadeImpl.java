@@ -9,6 +9,7 @@ package com.ymatou.mq.rabbit.dispatcher.facade.impl;
 
 
 import com.alibaba.dubbo.config.annotation.Service;
+import com.alibaba.fastjson.JSON;
 import com.ymatou.mq.infrastructure.model.Message;
 import com.ymatou.mq.infrastructure.util.NetUtil;
 import com.ymatou.mq.rabbit.dispatcher.facade.MessageDispatchFacade;
@@ -28,6 +29,8 @@ import java.util.Date;
 //@Service(protocol = "dubbo")
 @Component
 public class MessageDispatchFacadeImpl implements MessageDispatchFacade {
+
+    private static final String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
 
     @Autowired
     private MessageDispatchService messageDispatchService;
@@ -58,7 +61,7 @@ public class MessageDispatchFacadeImpl implements MessageDispatchFacade {
         msg.setQueueCode(req.getCode());
         msg.setId(ObjectId.get().toString());
         msg.setBizId(req.getMsgUniqueId());
-        msg.setBody(req.getBody());
+        msg.setBody(JSON.toJSONStringWithDateFormat(req.getBody(), DATE_FORMAT));
         msg.setClientIp(req.getIp());
         msg.setRecvIp(NetUtil.getHostIp());
         msg.setCreateTime(new Date());
