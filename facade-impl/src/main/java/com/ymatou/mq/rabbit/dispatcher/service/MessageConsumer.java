@@ -124,10 +124,9 @@ public class MessageConsumer implements Consumer{
             //TODO 更新消息状态为consumed
             String cluster = properties.getType();
             if(RabbitConstants.CLUSTER_MASTER.equals(cluster)){
-                logger.info("masterChannel status:{}",masterChannel.isOpen());
-                masterChannel.basicAck(envelope.getDeliveryTag(),false);
+                masterChannel.basicAck(envelope.getDeliveryTag(),true);
             }else{
-                slaveChannel.basicAck(envelope.getDeliveryTag(),false);
+                slaveChannel.basicAck(envelope.getDeliveryTag(),true);
             }
         }
     }
