@@ -41,32 +41,29 @@ public class DispatchCallbackService implements HttpInvokeResultService {
     private MessageService messageService;
 
     /**
-     * 回调处理
-     * @param message
+     * 回调
+     * @param callbackMessage
      */
-    public void invoke(Message message){
-        List<CallbackConfig> callbackConfigList = messageConfigService.getCallbackConfigList(message.getAppId(),message.getQueueCode());
-        if(CollectionUtils.isEmpty(callbackConfigList)){
-            logger.error("appId:{},queueCode:{} not exist subscribler.",message.getAppId(),message.getQueueCode());
+    public void invoke(CallbackMessage callbackMessage){
+        CallbackConfig callbackConfig = messageConfigService.getCallbackConfig(callbackMessage.getAppId(),callbackMessage.getQueueCode(),callbackMessage.getCallbackKey());
+        if(callbackConfig == null){
+            logger.error("callback config appId:{},queueCode:{},callbackKey:{} not exist.",callbackMessage.getAppId(),callbackMessage.getQueueCode(),callbackMessage.getCallbackKey());
             return;
         }
 
-        for(CallbackConfig callbackConfig:callbackConfigList){
-            doInvokeOne(message,callbackConfig,null);
-        }
-
+        doInvokeOne(callbackMessage,callbackConfig,null);
     }
 
     /**
      * 调用一个订阅者
-     * @param message
+     * @param callbackMessage
      * @param callbackConfig
+     * @param timeout
      */
-    void doInvokeOne(Message message,CallbackConfig callbackConfig,Long timeout){
+    void doInvokeOne(CallbackMessage callbackMessage,CallbackConfig callbackConfig,Long timeout){
         //async http send
         try {
-
-            new AsyncHttpInvokeService(MessageHelper.fromMessage(message),callbackConfig,this).send();
+            new AsyncHttpInvokeService(callbackMessage,callbackConfig,this).send();
         } catch (Exception e) {
             logger.error("doInvokeOne error.",e);
         }

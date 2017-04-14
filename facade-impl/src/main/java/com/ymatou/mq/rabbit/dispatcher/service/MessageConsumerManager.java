@@ -65,10 +65,12 @@ public class MessageConsumerManager {
             String dispatchGroup = appConfig.getDispatchGroup();
             if (dispatchGroup != null && dispatchGroup.contains(groupId)) {
                 for (QueueConfig queueConfig : appConfig.getMessageCfgList()) {
-                    MessageConsumer messageConsumer = new MessageConsumer(appConfig.getAppId(),queueConfig.getCode());
-                    messageConsumer.setRabbitConfig(rabbitConfig);
-                    messageConsumer.setDispatchCallbackService(dispatchCallbackService);
-                    messageConsumer.start();
+                    for(CallbackConfig callbackConfig:queueConfig.getCallbackCfgList()){
+                        MessageConsumer messageConsumer = new MessageConsumer(appConfig.getAppId(),queueConfig.getCode(),callbackConfig.getCallbackKey());
+                        messageConsumer.setRabbitConfig(rabbitConfig);
+                        messageConsumer.setDispatchCallbackService(dispatchCallbackService);
+                        messageConsumer.start();
+                    }
                 }
             }else{
                 //TODO 处理需要关停

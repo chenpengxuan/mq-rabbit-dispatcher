@@ -1,6 +1,7 @@
 package com.ymatou.mq.rabbit.dispatcher.service;
 
 import com.rabbitmq.client.*;
+import com.ymatou.mq.infrastructure.model.CallbackMessage;
 import com.ymatou.mq.infrastructure.model.Message;
 import com.ymatou.mq.rabbit.RabbitChannelFactory;
 import com.ymatou.mq.rabbit.config.RabbitConfig;
@@ -35,6 +36,11 @@ public class MessageConsumer implements Consumer{
     private String queueCode;
 
     /**
+     * 回调url KEY
+     */
+    private String callbackKey;
+
+    /**
      * master集群通道
      */
     private Channel masterChannel;
@@ -54,9 +60,10 @@ public class MessageConsumer implements Consumer{
      */
     private DispatchCallbackService dispatchCallbackService;
 
-    public MessageConsumer(String appId, String queueCode){
+    public MessageConsumer(String appId, String queueCode,String callbackKey){
         this.appId = appId;
         this.queueCode = queueCode;
+        this.callbackKey = callbackKey;
     }
 
     /**
@@ -105,21 +112,22 @@ public class MessageConsumer implements Consumer{
         logger.info("consumerTag:{},envelope:{},properties:{}.",consumerTag,envelope,properties);
 
         try {
-            Message message = new Message();
-            message.setAppId(appId);
-            message.setQueueCode(queueCode);
-            String sbody = (String) SerializationUtils.deserialize(body);
-            message.setBody(sbody);
+            CallbackMessage callbackMessage = new CallbackMessage();
+            callbackMessage.setAppId(appId);
+            callbackMessage.setQueueCode(queueCode);
+            callbackMessage.setCallbackKey(callbackKey);
             String msgId = properties.getMessageId();
-            message.setId(msgId);
+            callbackMessage.setId(msgId);
             String bizId = properties.getCorrelationId();
-            message.setBizId(bizId);
+            callbackMessage.setBizId(bizId);
+            String sbody = (String) SerializationUtils.deserialize(body);
+            callbackMessage.setBody(sbody);
 
             //MDC.put("logPrefix", "MessageConsumer|" + bizId);
 
-            dispatchCallbackService.invoke(message);
+            dispatchCallbackService.invoke(callbackMessage);
         } catch (Exception e) {
-            logger.error("dispatch callback error,consumerTag:{},envelope:{},properties:{}.",consumerTag,envelope,properties,e);
+            logger.error("handleDelivery message error,consumerTag:{},envelope:{},properties:{}.",consumerTag,envelope,properties,e);
         } finally {
             //TODO 更新消息状态为consumed
             String cluster = properties.getType();

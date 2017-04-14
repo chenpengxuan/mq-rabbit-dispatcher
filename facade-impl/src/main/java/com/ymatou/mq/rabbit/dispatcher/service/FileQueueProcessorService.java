@@ -6,8 +6,13 @@ import java.util.function.Function;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 
+import com.ymatou.mq.infrastructure.model.CallbackConfig;
+import com.ymatou.mq.infrastructure.model.CallbackMessage;
+import com.ymatou.mq.infrastructure.model.QueueConfig;
+import com.ymatou.mq.infrastructure.service.MessageConfigService;
 import com.ymatou.mq.infrastructure.service.MessageService;
 import com.ymatou.mq.rabbit.dispatcher.config.FileDbConf;
+import org.apache.commons.lang.SerializationUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,6 +42,9 @@ public class FileQueueProcessorService implements Function<Pair<String, String>,
 
     @Autowired
     private MessageService messageService;
+
+    @Autowired
+    private MessageConfigService messageConfigService;
 
     public FileDb getFileDb() {
         return fileDb;
@@ -90,12 +98,32 @@ public class FileQueueProcessorService implements Function<Pair<String, String>,
             //插消息
             messageService.saveMessage(message);
             //进行回调
-            dispatchCallbackService.invoke(message);
+            QueueConfig queueConfig = messageConfigService.getQueueConfig(message.getAppId(),message.getQueueCode());
+            for(CallbackConfig callbackConfig:queueConfig.getCallbackCfgList()){
+                dispatchCallbackService.invoke(convertMessage(message,callbackConfig.getCallbackKey()));
+            }
         } catch (Exception e) {
             logger.error("save message to mongo error", e);
-            return false;
+            //TODO 出错时处理?
+            return true;
         }
         return true;
+    }
+
+    /**
+     * 转化为CallbackMessage
+     * @param message
+     * @return
+     */
+    CallbackMessage convertMessage(Message message,String callbackKey){
+        CallbackMessage callbackMessage = new CallbackMessage();
+        callbackMessage.setAppId(message.getAppId());
+        callbackMessage.setQueueCode(message.getQueueCode());
+        callbackMessage.setCallbackKey(callbackKey);
+        callbackMessage.setId(message.getId());
+        callbackMessage.setBizId(message.getBizId());
+        callbackMessage.setBody(message.getBody());
+        return callbackMessage;
     }
 
     @Override
