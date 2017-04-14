@@ -130,6 +130,7 @@ public class MessageConsumer implements Consumer{
             logger.error("handleDelivery message error,consumerTag:{},envelope:{},properties:{}.",consumerTag,envelope,properties,e);
         } finally {
             //TODO 更新消息状态为consumed
+            //FIXME: 每个Consumer一个Channel，不应该根据消息属性来定Channel
             String cluster = properties.getType();
             if(RabbitConstants.CLUSTER_MASTER.equals(cluster)){
                 masterChannel.basicAck(envelope.getDeliveryTag(),true);
