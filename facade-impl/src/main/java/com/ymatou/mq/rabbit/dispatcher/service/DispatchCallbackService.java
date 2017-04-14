@@ -200,16 +200,18 @@ public class DispatchCallbackService implements HttpInvokeResultService {
         //url
         callbackResult.setUrl(callbackConfig.getUrl());
         //请求报文
-        callbackResult.setRequest(message.getBody());
-//        //响应报文
-//        if(StringUtils.isNotEmpty(result)){
-//            //TODO 细化result输出
-//            callbackResult.setResponse(result);
-//        }else if(ex != null){
-//            callbackResult.setResponse(ex != null?ex.getLocalizedMessage():"");
-//        }else{
-//            callbackResult.setResponse("unknow response.");
-//        }
+        callbackResult.setRequest(message.getResponse());
+        //响应报文
+        /*
+        if(StringUtils.isNotEmpty(result)){
+            //TODO 细化result输出
+            callbackResult.setResponse(result);
+        }else if(ex != null){
+            callbackResult.setResponse(ex != null?ex.getLocalizedMessage():"");
+        }else{
+            callbackResult.setResponse("unknow response.");
+        }
+        */
         callbackResult.setResponse(message.getResponse());
         //请求时间
         callbackResult.setReqTime(message.getCreateTime());

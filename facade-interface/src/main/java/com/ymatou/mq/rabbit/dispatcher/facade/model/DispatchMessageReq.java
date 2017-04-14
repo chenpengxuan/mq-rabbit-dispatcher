@@ -20,6 +20,11 @@ public class DispatchMessageReq extends BaseRequest {
     private static final long serialVersionUID = 1L;
 
     /**
+     * 消息id，若调用方不传则生成
+     */
+    private String id;
+
+    /**
      * 应用Id
      */
     @NotEmpty(message = "appId not empty")
@@ -50,6 +55,14 @@ public class DispatchMessageReq extends BaseRequest {
      */
     @NotNull(message = "body not null")
     private String body;
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
 
     /**
      * @return the appId

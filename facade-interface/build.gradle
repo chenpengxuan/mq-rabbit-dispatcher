@@ -27,4 +27,20 @@ dependencies {
 	compile "com.ymatou.resteasy:resteasy-jaxrs:${resteasyJaxrsVersion}"
 }
 
+//上传到nexus
+uploadArchives {
+	repositories {
+		mavenDeployer {
+			repository(url: "http://172.16.100.98/nexus/content/repositories/releases")
+					{ authentication(userName: "admin", password: "admin123") }
+			snapshotRepository(url: "http://172.16.100.98/nexus/content/repositories/snapshots")
+					{ authentication(userName: "admin", password: "admin123") }
+			pom.groupId = "$project.group"
+			pom.artifactId = "mq-rabbit-dispatcher-facade"
+			//pom.version = "$project.version"
+			pom.version = "${mqRabbitDispatcherFacadeVersion}"
+		}
+	}
+}
+
 

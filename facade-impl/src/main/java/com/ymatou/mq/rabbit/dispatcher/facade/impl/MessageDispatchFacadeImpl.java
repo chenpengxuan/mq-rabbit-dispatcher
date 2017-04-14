@@ -16,6 +16,7 @@ import com.ymatou.mq.rabbit.dispatcher.facade.MessageDispatchFacade;
 import com.ymatou.mq.rabbit.dispatcher.facade.model.DispatchMessageReq;
 import com.ymatou.mq.rabbit.dispatcher.facade.model.DispatchMessageResp;
 import com.ymatou.mq.rabbit.dispatcher.service.MessageDispatchService;
+import org.apache.commons.lang.StringUtils;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -26,7 +27,7 @@ import java.util.Date;
 /**
  * @author luoshiqian 2016/8/31 14:13
  */
-//@Service(protocol = "dubbo")
+@Service(protocol = "dubbo")
 @Component
 public class MessageDispatchFacadeImpl implements MessageDispatchFacade {
 
@@ -59,7 +60,11 @@ public class MessageDispatchFacadeImpl implements MessageDispatchFacade {
         Message msg = new Message();
         msg.setAppId(req.getAppId());
         msg.setQueueCode(req.getCode());
-        msg.setId(ObjectId.get().toString());
+        if(StringUtils.isBlank(req.getId())){
+            msg.setId(ObjectId.get().toString());
+        }else{
+            msg.setId(req.getId());
+        }
         msg.setBizId(req.getMsgUniqueId());
         msg.setBody(JSON.toJSONStringWithDateFormat(req.getBody(), DATE_FORMAT));
         msg.setClientIp(req.getIp());
