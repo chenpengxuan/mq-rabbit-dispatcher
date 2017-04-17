@@ -82,7 +82,7 @@ public class MessageConsumer implements Consumer{
                     logger.error("shutdownCompleted,cause:" + cause);
                 }
             });
-            masterChannel.basicConsume(this.queueCode,false,this);
+            masterChannel.basicConsume(callbackKey,false,this);
 
             //slave channel
             ChannelWrapper slaveChannelWrapper = RabbitChannelFactory.createChannelWrapper(RabbitConstants.CLUSTER_SLAVE,rabbitConfig);
@@ -93,7 +93,7 @@ public class MessageConsumer implements Consumer{
                     logger.error("shutdownCompleted,cause:" + cause);
                 }
             });
-            slaveChannel.basicConsume(this.queueCode,false,this);
+            slaveChannel.basicConsume(callbackKey,false,this);
         } catch (Exception e) {
             logger.error("basic consume error,queueCode:{}.",queueCode,e);
         }
