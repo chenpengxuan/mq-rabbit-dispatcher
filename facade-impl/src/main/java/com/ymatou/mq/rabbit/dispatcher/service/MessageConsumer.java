@@ -41,14 +41,14 @@ public class MessageConsumer implements Consumer{
     private String callbackKey;
 
     /**
-     * master集群通道
+     * 集群名称
      */
-    private Channel masterChannel;
+    private String cluster;
 
     /**
-     * slave集群通道
+     * 集群通道
      */
-    private Channel slaveChannel;
+    private Channel channel;
 
     /**
      * rabbit配置
@@ -60,10 +60,11 @@ public class MessageConsumer implements Consumer{
      */
     private DispatchCallbackService dispatchCallbackService;
 
-    public MessageConsumer(String appId, String queueCode,String callbackKey){
+    public MessageConsumer(String appId, String queueCode,String callbackKey,String cluster){
         this.appId = appId;
         this.queueCode = queueCode;
         this.callbackKey = callbackKey;
+        this.cluster = cluster;
     }
 
     /**
@@ -71,29 +72,17 @@ public class MessageConsumer implements Consumer{
      */
     public void start(){
         try {
-            //master channel
             //TODO 可调整conn/channel对应的数量关系
-            ChannelWrapper masterChannelWrapper = RabbitChannelFactory.createChannelWrapper(RabbitConstants.CLUSTER_MASTER,rabbitConfig);
-            masterChannel = masterChannelWrapper.getChannel();
+            ChannelWrapper masterChannelWrapper = RabbitChannelFactory.createChannelWrapper(cluster,rabbitConfig);
+            channel = masterChannelWrapper.getChannel();
             //TODO 处理channel关闭事件
-            masterChannel.addShutdownListener(new ShutdownListener() {
+            channel.addShutdownListener(new ShutdownListener() {
                 @Override
                 public void shutdownCompleted(ShutdownSignalException cause) {
                     logger.error("shutdownCompleted,cause:" + cause);
                 }
             });
-            masterChannel.basicConsume(callbackKey,false,this);
-
-            //slave channel
-            ChannelWrapper slaveChannelWrapper = RabbitChannelFactory.createChannelWrapper(RabbitConstants.CLUSTER_SLAVE,rabbitConfig);
-            slaveChannel = slaveChannelWrapper.getChannel();
-            slaveChannel.addShutdownListener(new ShutdownListener() {
-                @Override
-                public void shutdownCompleted(ShutdownSignalException cause) {
-                    logger.error("shutdownCompleted,cause:" + cause);
-                }
-            });
-            slaveChannel.basicConsume(callbackKey,false,this);
+            channel.basicConsume(callbackKey,false,this);
         } catch (Exception e) {
             logger.error("basic consume error,queueCode:{}.",queueCode,e);
         }
@@ -130,13 +119,7 @@ public class MessageConsumer implements Consumer{
             logger.error("handleDelivery message error,consumerTag:{},envelope:{},properties:{}.",consumerTag,envelope,properties,e);
         } finally {
             //TODO 更新消息状态为consumed
-            //FIXME: 每个Consumer一个Channel，不应该根据消息属性来定Channel
-            String cluster = properties.getType();
-            if(RabbitConstants.CLUSTER_MASTER.equals(cluster)){
-                masterChannel.basicAck(envelope.getDeliveryTag(),false);
-            }else{
-                slaveChannel.basicAck(envelope.getDeliveryTag(),false);
-            }
+            channel.basicAck(envelope.getDeliveryTag(),false);
         }
     }
 
@@ -169,28 +152,12 @@ public class MessageConsumer implements Consumer{
         return rabbitConfig;
     }
 
-    public Channel getMasterChannel() {
-        return masterChannel;
-    }
-
-    public void setMasterChannel(Channel masterChannel) {
-        this.masterChannel = masterChannel;
-    }
-
     public String getQueueCode() {
         return queueCode;
     }
 
     public void setQueueCode(String queueCode) {
         this.queueCode = queueCode;
-    }
-
-    public Channel getSlaveChannel() {
-        return slaveChannel;
-    }
-
-    public void setSlaveChannel(Channel slaveChannel) {
-        this.slaveChannel = slaveChannel;
     }
 
     public void setRabbitConfig(RabbitConfig rabbitConfig) {

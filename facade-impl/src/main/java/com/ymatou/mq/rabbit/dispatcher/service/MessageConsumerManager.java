@@ -9,6 +9,7 @@ import com.ymatou.mq.infrastructure.support.SemaphorManager;
 import com.ymatou.mq.rabbit.config.RabbitConfig;
 import com.ymatou.mq.rabbit.dispatcher.config.DispatchConfig;
 
+import com.ymatou.mq.rabbit.support.RabbitConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -61,15 +62,18 @@ public class MessageConsumerManager {
         logger.debug("current group id:{}.",groupId);
         List<AppConfig> appConfigList = messageConfigService.getAllAppConfig();
         logger.debug("appConfigList size:{}.",appConfigList != null?appConfigList.size():"0");
+        String[] clusters = {RabbitConstants.CLUSTER_MASTER,RabbitConstants.CLUSTER_SLAVE};
         for(AppConfig appConfig:appConfigList){
             String dispatchGroup = appConfig.getDispatchGroup();
             if (dispatchGroup != null && dispatchGroup.contains(groupId)) {
                 for (QueueConfig queueConfig : appConfig.getMessageCfgList()) {
                     for(CallbackConfig callbackConfig:queueConfig.getCallbackCfgList()){
-                        MessageConsumer messageConsumer = new MessageConsumer(appConfig.getAppId(),queueConfig.getCode(),callbackConfig.getCallbackKey());
-                        messageConsumer.setRabbitConfig(rabbitConfig);
-                        messageConsumer.setDispatchCallbackService(dispatchCallbackService);
-                        messageConsumer.start();
+                        for(String cluster:clusters){
+                            MessageConsumer messageConsumer = new MessageConsumer(appConfig.getAppId(),queueConfig.getCode(),callbackConfig.getCallbackKey(),cluster);
+                            messageConsumer.setRabbitConfig(rabbitConfig);
+                            messageConsumer.setDispatchCallbackService(dispatchCallbackService);
+                            messageConsumer.start();
+                        }
                     }
                 }
             }else{
