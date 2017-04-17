@@ -241,7 +241,8 @@ public class DispatchCallbackService implements HttpInvokeResultService {
         messageCompensate.setSource(CompensateFromEnum.DISPATCH.ordinal());
         messageCompensate.setStatus(CompensateStatusEnum.INIT.ordinal());
         messageCompensate.setCreateTime(new Date());
-        //TODO 下次补单时间
+        messageCompensate.setUpdateTime(new Date());
+        messageCompensate.setNextTime(new Date());
         return messageCompensate;
     }
 
