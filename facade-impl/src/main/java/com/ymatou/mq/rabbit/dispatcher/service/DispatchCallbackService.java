@@ -228,7 +228,7 @@ public class DispatchCallbackService implements HttpInvokeResultService {
         messageCompensate.setBizId(message.getBizId());
         messageCompensate.setBody(message.getBody());
         messageCompensate.setSource(CompensateFromEnum.DISPATCH.ordinal());
-        messageCompensate.setStatus(CompensateStatusEnum.INIT.ordinal());
+        messageCompensate.setStatus(CompensateStatusEnum.COMPENSATE.ordinal());
         messageCompensate.setCreateTime(new Date());
         messageCompensate.setUpdateTime(new Date());
         messageCompensate.setNextTime(new Date());
