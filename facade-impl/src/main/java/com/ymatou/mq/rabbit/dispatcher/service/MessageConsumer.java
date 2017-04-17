@@ -133,10 +133,9 @@ public class MessageConsumer implements Consumer{
             //FIXME: 每个Consumer一个Channel，不应该根据消息属性来定Channel
             String cluster = properties.getType();
             if(RabbitConstants.CLUSTER_MASTER.equals(cluster)){
-                //FIXME:multiple为什么不是false??
-                masterChannel.basicAck(envelope.getDeliveryTag(),true);
+                masterChannel.basicAck(envelope.getDeliveryTag(),false);
             }else{
-                slaveChannel.basicAck(envelope.getDeliveryTag(),true);
+                slaveChannel.basicAck(envelope.getDeliveryTag(),false);
             }
         }
     }
