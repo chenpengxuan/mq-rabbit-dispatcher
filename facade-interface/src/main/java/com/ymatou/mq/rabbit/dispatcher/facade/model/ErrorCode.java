@@ -20,7 +20,9 @@ public enum ErrorCode {
     UNKNOWN(199, "未知错误，系统异常"),
 
     // 请求处理过程中，出现未知错误
-    QUEUE_CONFIG_NOT_EXIST(1001,"队列配置不存在.");
+    QUEUE_CONFIG_NOT_EXIST(1001,"队列配置不存在."),
+
+    QUEUE_CONFIG_NOT_ENABLE(1002,"队列配置没有开启.");
 
     private int code;
 

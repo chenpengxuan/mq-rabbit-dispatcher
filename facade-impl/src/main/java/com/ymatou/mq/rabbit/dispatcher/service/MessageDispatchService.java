@@ -85,6 +85,9 @@ public class MessageDispatchService{
         if(queueConfig == null){
             throw new BizException(ErrorCode.QUEUE_CONFIG_NOT_EXIST,String.format("appId:[%s],queueCode:[%s] not exist.",appId, queueCode));
         }
+        if(!queueConfig.getEnable()){
+            throw new BizException(ErrorCode.QUEUE_CONFIG_NOT_ENABLE,String.format("appId:[%s],queueCode:[%s] not enabled.",appId, queueCode));
+        }
     }
 
 }

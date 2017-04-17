@@ -17,7 +17,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.PostConstruct;
+import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * MQ消息消费管理，如启动、关闭消费等
@@ -41,6 +43,11 @@ public class MessageConsumerManager {
     private DispatchCallbackService dispatchCallbackService;
 
     /**
+     * messageConumser映射表
+     */
+    private static Map<String,MessageConsumer> messageConsumerMap = new ConcurrentHashMap<String,MessageConsumer>();
+
+    /**
      * 启动消费监听
      */
     @PostConstruct
@@ -48,14 +55,6 @@ public class MessageConsumerManager {
         //初始化信号量
         Map<String, CallbackConfig> callbackConfigMap = messageConfigService.getCallbackConfigMap();
         SemaphorManager.initSemaphores(callbackConfigMap.values());
-
-        //添加配置变化监听
-        messageConfigService.addConfigCacheListener(new ConfigReloadListener(){
-            @Override
-            public void callback() {
-                //TODO 处理配置变化
-            }
-        });
 
         //启动消费监听
         String groupId = dispatchConfig.getGroupId();
@@ -65,36 +64,78 @@ public class MessageConsumerManager {
         String[] clusters = {RabbitConstants.CLUSTER_MASTER,RabbitConstants.CLUSTER_SLAVE};
         for(AppConfig appConfig:appConfigList){
             String dispatchGroup = appConfig.getDispatchGroup();
-            if (dispatchGroup != null && dispatchGroup.contains(groupId)) {
-                for (QueueConfig queueConfig : appConfig.getMessageCfgList()) {
-                    for(CallbackConfig callbackConfig:queueConfig.getCallbackCfgList()){
-                        for(String cluster:clusters){
-                            MessageConsumer messageConsumer = new MessageConsumer(appConfig.getAppId(),queueConfig.getCode(),callbackConfig.getCallbackKey(),cluster);
-                            messageConsumer.setRabbitConfig(rabbitConfig);
-                            messageConsumer.setDispatchCallbackService(dispatchCallbackService);
-                            messageConsumer.start();
-                        }
+            //若所属分组为空或者不匹配，则跳过
+            if (dispatchGroup == null || !dispatchGroup.contains(groupId)) {
+                continue;
+            }
+            for (QueueConfig queueConfig : appConfig.getMessageCfgList()) {
+                for(CallbackConfig callbackConfig:queueConfig.getCallbackCfgList()){
+                    //若配置没有开启，则跳过
+                    if(!queueConfig.getEnable() || !callbackConfig.getEnable()){
+                        continue;
+                    }
+                    for(String cluster:clusters){
+                        startConsumer(appConfig.getAppId(),queueConfig.getCode(),callbackConfig.getCallbackKey(),cluster);
                     }
                 }
-            }else{
-                //TODO 处理需要关停
             }
         }
 
     }
 
     /**
-     * 停止所有queue监听
+     * 启动consumer
+     * @param appId
+     * @param queueCode
+     * @param callbackKey
+     * @param cluster
      */
-    public void stopAll(){
-        //TODO 停止所有queue
+    void startConsumer(String appId,String queueCode,String callbackKey,String cluster){
+        try {
+            MessageConsumer messageConsumer = new MessageConsumer(appId,queueCode,callbackKey,cluster);
+            messageConsumer.setRabbitConfig(rabbitConfig);
+            messageConsumer.setDispatchCallbackService(dispatchCallbackService);
+            messageConsumer.start();
+
+            //添加到消费映射表
+            String messageConsumerId = String.format("%s_%s",callbackKey,cluster);
+            if(messageConsumerMap.get(messageConsumerId) == null){
+                messageConsumerMap.put(messageConsumerId,messageConsumer);
+            }
+        } catch (Exception e) {
+            logger.error("start consumer appId:{},queueCode:{},callbackKey:{},cluster:{} error.",appId,queueCode,callbackKey,cluster,e);
+        }
     }
 
     /**
-     * stop对应的queue消费监听
-     * @param queueCode
+     * 停止所有queue监听
      */
-    public void stop(String queueCode){
-        //TODO
+    public void stopAll(){
+        //关停消费监听
+        for(MessageConsumer messageConsumer:messageConsumerMap.values()){
+            messageConsumer.stop();
+            messageConsumerMap.remove(messageConsumer);
+        }
     }
+
+    /**
+     * stop对应的消费监听
+     * @param callbackKey
+     * @param cluster
+     */
+    public void stopConsumer(String callbackKey,String cluster){
+        try {
+            String messageConsumerId = String.format("%s_%s",callbackKey,cluster);
+            MessageConsumer messageConsumer = messageConsumerMap.get(messageConsumerId);
+            messageConsumer.stop();
+            messageConsumerMap.remove(messageConsumerId);
+        } catch (Exception e) {
+            logger.error("stop consumer callbackKey:{},cluster:{} error.",callbackKey,cluster,e);
+        }
+    }
+
+    public static Map<String, MessageConsumer> getMessageConsumerMap() {
+        return messageConsumerMap;
+    }
+
 }

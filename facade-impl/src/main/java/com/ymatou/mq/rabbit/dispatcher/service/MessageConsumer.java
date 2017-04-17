@@ -15,6 +15,7 @@ import org.slf4j.MDC;
 import java.io.IOException;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -70,30 +71,32 @@ public class MessageConsumer implements Consumer{
     /**
      * 启动消费监听
      */
-    public void start(){
-        try {
-            //TODO 可调整conn/channel对应的数量关系
-            ChannelWrapper masterChannelWrapper = RabbitChannelFactory.createChannelWrapper(cluster,rabbitConfig);
-            channel = masterChannelWrapper.getChannel();
-            //TODO 处理channel关闭事件
-            channel.addShutdownListener(new ShutdownListener() {
-                @Override
-                public void shutdownCompleted(ShutdownSignalException cause) {
-                    logger.error("shutdownCompleted,cause:" + cause);
-                }
-            });
-            channel.basicConsume(callbackKey,false,this);
-        } catch (Exception e) {
-            logger.error("basic consume error,queueCode:{}.",queueCode,e);
-        }
-
+    public void start() throws IOException {
+        //TODO 可调整conn/channel对应的数量关系
+        ChannelWrapper masterChannelWrapper = RabbitChannelFactory.createChannelWrapper(cluster,rabbitConfig);
+        channel = masterChannelWrapper.getChannel();
+        //TODO 处理channel关闭事件
+        channel.addShutdownListener(new ShutdownListener() {
+            @Override
+            public void shutdownCompleted(ShutdownSignalException cause) {
+                logger.error("shutdownCompleted,cause:" + cause);
+            }
+        });
+        channel.basicConsume(callbackKey,false,this);
     }
 
     /**
      * 关闭消费监听
      */
     public void stop(){
-        //TODO
+        logger.info("close message consumer callbackKey:{},cluster:{}",callbackKey,cluster);
+        if(channel != null && channel.isOpen()){
+            try {
+                channel.close();
+            } catch (Exception e) {
+                logger.error("close channel error.",e);
+            }
+        }
     }
 
     @Override

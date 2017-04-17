@@ -97,7 +97,6 @@ public class DispatchCallbackService implements HttpInvokeResultService {
             if(isNeedInsertCompensate){//若需要插补单
                 //插补单
                 MessageCompensate messageCompensate = this.buildCompensate(message,callbackConfig);
-                //TODO 补充补单字段
                 messageService.insertCompensate(messageCompensate);
 
                 //更新分发明细状态
@@ -199,16 +198,6 @@ public class DispatchCallbackService implements HttpInvokeResultService {
         //请求报文
         callbackResult.setRequest(message.getResponse());
         //响应报文
-        /*
-        if(StringUtils.isNotEmpty(result)){
-            //TODO 细化result输出
-            callbackResult.setResponse(result);
-        }else if(ex != null){
-            callbackResult.setResponse(ex != null?ex.getLocalizedMessage():"");
-        }else{
-            callbackResult.setResponse("unknow response.");
-        }
-        */
         callbackResult.setResponse(message.getResponse());
         //请求时间
         callbackResult.setReqTime(message.getCreateTime());
