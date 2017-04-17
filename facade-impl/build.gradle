@@ -21,7 +21,6 @@ dependencies {
 
 	compile "com.ymatou.mq:mq-infrastructure:${mqInfrastructureVersion}"
 	compile "com.ymatou.mq:mq-rabbit-common:${mqRabbitCommonVersion}"
-
 }
 
 
