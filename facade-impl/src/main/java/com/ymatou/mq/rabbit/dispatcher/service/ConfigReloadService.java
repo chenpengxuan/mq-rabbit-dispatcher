@@ -42,6 +42,8 @@ public class ConfigReloadService implements ConfigReloadListener {
     @PostConstruct
     public void init() {
         messageConfigService.addConfigCacheListener(this);
+        //启动时consumer处理
+        handleConsumer();
     }
 
     @Override

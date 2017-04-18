@@ -11,7 +11,7 @@ import com.baidu.disconf.client.common.annotations.DisconfUpdateService;
 import com.baidu.disconf.client.common.update.IDisconfUpdate;
 import com.ymatou.mq.infrastructure.filedb.FileDbConfig;
 import com.ymatou.mq.infrastructure.util.SpringContextHolder;
-import com.ymatou.mq.rabbit.dispatcher.service.FileQueueProcessorService;
+import com.ymatou.mq.rabbit.dispatcher.service.MessageFileQueueService;
 import org.springframework.stereotype.Component;
 
 import com.baidu.disconf.client.common.annotations.DisconfFile;
@@ -25,74 +25,146 @@ import com.baidu.disconf.client.common.annotations.DisconfFileItem;
 @DisconfUpdateService(confFileKeys = "filedb.properties")
 public class FileDbConf implements IDisconfUpdate{
 
+    //-----------------msgdb------------------
+
     /**
-     * store的名称，以及 线程池中的名称
+     * msgdb store的名称，以及 线程池中的名称
      */
-    private String dbName;
+    private String msgDbName;
 
     /**
      * 文件路径 或 文件夹路径
      */
-    private String dbPath;
+    private String msgDbPath;
     /**
      * 消费间隔 ms default: 1秒
      */
-    private long consumeDuration;
+    private long msgDbConsumeDuration;
 
     /**
      * 一次消费间隔最大消费数
      */
-    private int maxConsumeSizeInDuration;
+    private int msgDbMaxConsumeSizeInDuration;
 
     /**
      * 消费者线程数 默认1
      */
-    private int consumerThreadNums;
+    private int msgDbConsumerThreadNums;
 
+    //-----------------actiondb------------------
 
-    @DisconfFileItem(name = "filedb.dbName")
-    public String getDbName() {
-        return dbName;
+    /**
+     * action store的名称，以及 线程池中的名称
+     */
+    private String actionDbName;
+
+    /**
+     * 文件路径 或 文件夹路径
+     */
+    private String actionDbPath;
+    /**
+     * 消费间隔 ms default: 1秒
+     */
+    private long actionDbConsumeDuration;
+
+    /**
+     * 一次消费间隔最大消费数
+     */
+    private int actionDbMaxConsumeSizeInDuration;
+
+    /**
+     * 消费者线程数 默认1
+     */
+    private int actionDbConsumerThreadNums;
+
+    @DisconfFileItem(name = "msgdb.dbName")
+    public String getMsgDbName() {
+        return msgDbName;
     }
 
-    public void setDbName(String dbName) {
-        this.dbName = dbName;
+    public void setMsgDbName(String msgDbName) {
+        this.msgDbName = msgDbName;
     }
 
-    @DisconfFileItem(name = "filedb.dbPath")
-    public String getDbPath() {
-        return dbPath;
+    @DisconfFileItem(name = "msgdb.dbPath")
+    public String getMsgDbPath() {
+        return msgDbPath;
     }
 
-    public void setDbPath(String dbPath) {
-        this.dbPath = dbPath;
+    public void setMsgDbPath(String msgDbPath) {
+        this.msgDbPath = msgDbPath;
     }
 
-    @DisconfFileItem(name = "filedb.consumeDuration")
-    public long getConsumeDuration() {
-        return consumeDuration;
+    @DisconfFileItem(name = "msgdb.consumeDuration")
+    public long getMsgDbConsumeDuration() {
+        return msgDbConsumeDuration;
     }
 
-    public void setConsumeDuration(long consumeDuration) {
-        this.consumeDuration = consumeDuration;
+    public void setMsgDbConsumeDuration(long msgDbConsumeDuration) {
+        this.msgDbConsumeDuration = msgDbConsumeDuration;
     }
 
-    @DisconfFileItem(name = "filedb.maxConsumeSizeInDuration")
-    public int getMaxConsumeSizeInDuration() {
-        return maxConsumeSizeInDuration;
+    @DisconfFileItem(name = "msgdb.consumerThreadNums")
+    public int getMsgDbConsumerThreadNums() {
+        return msgDbConsumerThreadNums;
     }
 
-    public void setMaxConsumeSizeInDuration(int maxConsumeSizeInDuration) {
-        this.maxConsumeSizeInDuration = maxConsumeSizeInDuration;
+    public void setMsgDbConsumerThreadNums(int msgDbConsumerThreadNums) {
+        this.msgDbConsumerThreadNums = msgDbConsumerThreadNums;
     }
 
-    @DisconfFileItem(name = "filedb.consumerThreadNums")
-    public int getConsumerThreadNums() {
-        return consumerThreadNums;
+    @DisconfFileItem(name = "msgdb.maxConsumeSizeInDuration")
+    public int getMsgDbMaxConsumeSizeInDuration() {
+        return msgDbMaxConsumeSizeInDuration;
     }
 
-    public void setConsumerThreadNums(int consumerThreadNums) {
-        this.consumerThreadNums = consumerThreadNums;
+    public void setMsgDbMaxConsumeSizeInDuration(int msgDbMaxConsumeSizeInDuration) {
+        this.msgDbMaxConsumeSizeInDuration = msgDbMaxConsumeSizeInDuration;
+    }
+
+    @DisconfFileItem(name = "actiondb.dbName")
+    public String getActionDbName() {
+        return actionDbName;
+    }
+
+    public void setActionDbName(String actionDbName) {
+        this.actionDbName = actionDbName;
+    }
+
+    @DisconfFileItem(name = "actiondb.dbPath")
+    public String getActionDbPath() {
+        return actionDbPath;
+    }
+
+    public void setActionDbPath(String actionDbPath) {
+        this.actionDbPath = actionDbPath;
+    }
+
+    @DisconfFileItem(name = "actiondb.consumeDuration")
+    public long getActionDbConsumeDuration() {
+        return actionDbConsumeDuration;
+    }
+
+    public void setActionDbConsumeDuration(long actionDbConsumeDuration) {
+        this.actionDbConsumeDuration = actionDbConsumeDuration;
+    }
+
+    @DisconfFileItem(name = "actiondb.consumerThreadNums")
+    public int getActionDbConsumerThreadNums() {
+        return actionDbConsumerThreadNums;
+    }
+
+    public void setActionDbConsumerThreadNums(int actionDbConsumerThreadNums) {
+        this.actionDbConsumerThreadNums = actionDbConsumerThreadNums;
+    }
+
+    @DisconfFileItem(name = "actiondb.maxConsumeSizeInDuration")
+    public int getActionDbMaxConsumeSizeInDuration() {
+        return actionDbMaxConsumeSizeInDuration;
+    }
+
+    public void setActionDbMaxConsumeSizeInDuration(int actionDbMaxConsumeSizeInDuration) {
+        this.actionDbMaxConsumeSizeInDuration = actionDbMaxConsumeSizeInDuration;
     }
 
     /**
@@ -101,13 +173,23 @@ public class FileDbConf implements IDisconfUpdate{
      */
     @Override
     public void reload() throws Exception {
+        //msgDb
+        FileDbConfig msgDbNewConfig = FileDbConfig.newInstance()
+                .setConsumerThreadNums(getMsgDbConsumerThreadNums())
+                .setConsumeDuration(getMsgDbConsumeDuration())
+                .setMaxConsumeSizeInDuration(getMsgDbMaxConsumeSizeInDuration());
 
-        FileDbConfig newConfig = FileDbConfig.newInstance()
-                .setConsumerThreadNums(getConsumerThreadNums())
-                .setConsumeDuration(getConsumeDuration())
-                .setMaxConsumeSizeInDuration(getMaxConsumeSizeInDuration());
+        MessageFileQueueService messageFileQueueService = SpringContextHolder.getBean(MessageFileQueueService.class);
+        messageFileQueueService.getFileDb().reset(msgDbNewConfig);
 
-        FileQueueProcessorService fileQueueProcessorService = SpringContextHolder.getBean(FileQueueProcessorService.class);
-        fileQueueProcessorService.getFileDb().reset(newConfig);
+        //actionDb
+        FileDbConfig actionDbNewConfig = FileDbConfig.newInstance()
+                .setConsumerThreadNums(getActionDbConsumerThreadNums())
+                .setConsumeDuration(getActionDbConsumeDuration())
+                .setMaxConsumeSizeInDuration(getActionDbMaxConsumeSizeInDuration());
+        /*
+        MessageFileQueueService messageFileQueueService = SpringContextHolder.getBean(MessageFileQueueService.class);
+        messageFileQueueService.getFileDb().reset(msgDbNewConfig);
+        */
     }
 }

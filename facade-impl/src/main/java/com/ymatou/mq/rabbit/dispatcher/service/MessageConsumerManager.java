@@ -52,10 +52,6 @@ public class MessageConsumerManager {
      */
     @PostConstruct
     public void startAll(){
-        //初始化信号量
-        Map<String, CallbackConfig> callbackConfigMap = messageConfigService.getCallbackConfigMap();
-        SemaphorManager.initSemaphores(callbackConfigMap.values());
-
         //启动消费监听
         String groupId = dispatchConfig.getGroupId();
         logger.debug("current group id:{}.",groupId);

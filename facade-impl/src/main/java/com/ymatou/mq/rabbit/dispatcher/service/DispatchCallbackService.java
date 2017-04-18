@@ -1,5 +1,6 @@
 package com.ymatou.mq.rabbit.dispatcher.service;
 
+import com.alibaba.fastjson.JSON;
 import com.ymatou.mq.infrastructure.model.*;
 import com.ymatou.mq.infrastructure.service.AsyncHttpInvokeService;
 import com.ymatou.mq.infrastructure.service.HttpInvokeResultService;
@@ -9,21 +10,18 @@ import com.ymatou.mq.infrastructure.support.enums.CallbackFromEnum;
 import com.ymatou.mq.infrastructure.support.enums.CompensateFromEnum;
 import com.ymatou.mq.infrastructure.support.enums.CompensateStatusEnum;
 import com.ymatou.mq.infrastructure.support.enums.DispatchStatusEnum;
-import com.ymatou.mq.infrastructure.util.MessageHelper;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.util.EntityUtils;
+import com.ymatou.mq.rabbit.dispatcher.support.Action;
+import com.ymatou.mq.rabbit.dispatcher.support.ActionConstants;
+import com.ymatou.mq.rabbit.dispatcher.support.ActionListener;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.util.CollectionUtils;
 
+import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.util.Date;
-import java.util.List;
 
 /**
  * 消息分发callack service
@@ -39,6 +37,15 @@ public class DispatchCallbackService implements HttpInvokeResultService {
 
     @Autowired
     private MessageService messageService;
+
+    @Autowired
+    private ActionFileQueueService actionFileQueueService;
+
+    @PostConstruct
+    public void init(){
+        String key = String.format("%s_%d", ActionConstants.ENTITY_DISPATCH, ActionConstants.ACTION_TYPE_UPDATE);
+        actionFileQueueService.addActionListener(key,new UpdateDetailActionListener());
+    }
 
     /**
      * 回调
@@ -101,15 +108,31 @@ public class DispatchCallbackService implements HttpInvokeResultService {
 
                 //更新分发明细状态
                 CallbackResult callbackResult = this.buildCallbackResult(message,callbackConfig,true);
-                messageService.updateDispatchDetail(callbackResult);
+                Action action = buildAction(ActionConstants.ENTITY_DISPATCH, ActionConstants.ACTION_TYPE_UPDATE,callbackResult);
+                actionFileQueueService.saveActionToFileDb(action);
             }else{//若不需要插补单
                 //更新分发明细状态
                 CallbackResult callbackResult = this.buildCallbackResult(message,callbackConfig,false);
-                messageService.updateDispatchDetail(callbackResult);
+                Action action = buildAction(ActionConstants.ENTITY_DISPATCH, ActionConstants.ACTION_TYPE_UPDATE,callbackResult);
+                actionFileQueueService.saveActionToFileDb(action);
             }
         } catch (Exception e) {
             logger.error("onInvokeFail proccess error.",e);
         }
+    }
+
+    /**
+     * 构造action
+     * @param callbackResult
+     * @return
+     */
+    Action buildAction(String entity,int actionType,CallbackResult callbackResult){
+        Action action = new Action();
+        action.setEntity(entity);
+        action.setActionType(actionType);
+        action.setId(ObjectId.get().toString());
+        action.setObj(callbackResult);
+        return action;
     }
 
     /**
@@ -233,6 +256,19 @@ public class DispatchCallbackService implements HttpInvokeResultService {
         messageCompensate.setUpdateTime(new Date());
         messageCompensate.setNextTime(new Date());
         return messageCompensate;
+    }
+
+    /**
+     * 更新明细操作监听
+     */
+    class UpdateDetailActionListener implements ActionListener{
+
+        @Override
+        public void execute(Object obj) {
+            logger.info("execute updateDetail action...");
+            CallbackResult callbackResult = JSON.parseObject(String.valueOf(obj),CallbackResult.class);
+            messageService.updateDispatchDetail(callbackResult);
+        }
     }
 
 }

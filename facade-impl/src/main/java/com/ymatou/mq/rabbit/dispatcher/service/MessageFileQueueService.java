@@ -12,7 +12,6 @@ import com.ymatou.mq.infrastructure.model.QueueConfig;
 import com.ymatou.mq.infrastructure.service.MessageConfigService;
 import com.ymatou.mq.infrastructure.service.MessageService;
 import com.ymatou.mq.rabbit.dispatcher.config.FileDbConf;
-import org.apache.commons.lang.SerializationUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,9 +27,9 @@ import com.ymatou.mq.infrastructure.model.Message;
  * 本地消息文件列表处理service Created by zhangzhihua on 2017/3/24.
  */
 @Component
-public class FileQueueProcessorService implements Function<Pair<String, String>, Boolean>, PutExceptionHandler {
+public class MessageFileQueueService implements Function<Pair<String, String>, Boolean>, PutExceptionHandler {
 
-    private static final Logger logger = LoggerFactory.getLogger(FileQueueProcessorService.class);
+    private static final Logger logger = LoggerFactory.getLogger(MessageFileQueueService.class);
 
     private FileDb fileDb;
 
@@ -57,11 +56,11 @@ public class FileQueueProcessorService implements Function<Pair<String, String>,
     @PostConstruct
     public void init() {
         FileDbConfig fileDbConfig = FileDbConfig.newInstance()
-                .setDbName(this.fileDbConf.getDbName())
-                .setDbPath(this.fileDbConf.getDbPath())
-                .setConsumerThreadNums(this.fileDbConf.getConsumerThreadNums())
-                .setConsumeDuration(this.fileDbConf.getConsumeDuration())
-                .setMaxConsumeSizeInDuration(this.fileDbConf.getMaxConsumeSizeInDuration())
+                .setDbName(this.fileDbConf.getMsgDbName())
+                .setDbPath(this.fileDbConf.getMsgDbPath())
+                .setConsumerThreadNums(this.fileDbConf.getMsgDbConsumerThreadNums())
+                .setConsumeDuration(this.fileDbConf.getMsgDbConsumeDuration())
+                .setMaxConsumeSizeInDuration(this.fileDbConf.getMsgDbMaxConsumeSizeInDuration())
                 .setConsumer(this)
                 .setPutExceptionHandler(this);
 
@@ -91,21 +90,29 @@ public class FileQueueProcessorService implements Function<Pair<String, String>,
      */
     @Override
     public Boolean apply(Pair<String, String> pair) {
-        Boolean success = Boolean.FALSE;
+        boolean saveMsgResult = false;
+        boolean dispatchResult = false;
         try {
             //消费数据
             Message message = Message.fromJson(pair.getValue());
             //插消息
             messageService.saveMessage(message);
+            saveMsgResult = true;
+
             //进行回调
             QueueConfig queueConfig = messageConfigService.getQueueConfig(message.getAppId(),message.getQueueCode());
             for(CallbackConfig callbackConfig:queueConfig.getCallbackCfgList()){
                 dispatchCallbackService.invoke(convertMessage(message,callbackConfig.getCallbackKey()));
             }
+            dispatchResult = true;
         } catch (Exception e) {
-            logger.error("save message to mongo error", e);
-            //TODO 出错时处理?
-            return true;
+            logger.error("save message or dispatch error", e);
+            //若写消息或分发有一个成功，则返回true
+            if(dispatchResult || saveMsgResult){
+                return true;
+            }else{
+                return false;
+            }
         }
         return true;
     }
