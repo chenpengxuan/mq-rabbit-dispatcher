@@ -13,6 +13,7 @@ import com.ymatou.mq.infrastructure.support.enums.DispatchStatusEnum;
 import com.ymatou.mq.rabbit.dispatcher.support.Action;
 import com.ymatou.mq.rabbit.dispatcher.support.ActionConstants;
 import com.ymatou.mq.rabbit.dispatcher.support.ActionListener;
+import com.ymatou.performancemonitorclient.PerformanceStatisticContainer;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,6 +32,8 @@ import java.util.Date;
 public class DispatchCallbackService implements HttpInvokeResultService {
 
     private static final Logger logger = LoggerFactory.getLogger(DispatchCallbackService.class);
+
+    public static final String MONITOR_APP_ID = "mqmonitor.iapi.ymatou.com";
 
     @Autowired
     private MessageConfigService messageConfigService;
@@ -68,12 +71,19 @@ public class DispatchCallbackService implements HttpInvokeResultService {
      * @param timeout
      */
     void doInvokeOne(CallbackMessage callbackMessage,CallbackConfig callbackConfig,Long timeout){
-        //async http send
+        long startTime = System.currentTimeMillis();
+
         try {
+            //async http send
             new AsyncHttpInvokeService(callbackMessage,callbackConfig,this).send();
         } catch (Exception e) {
             logger.error("doInvokeOne error.",e);
         }
+
+        // 上报分发回调性能数据
+        long consumedTime = System.currentTimeMillis() - startTime;
+        PerformanceStatisticContainer.add(consumedTime, String.format("%s.dispatch", callbackConfig.getCallbackKey()),
+                MONITOR_APP_ID);
     }
 
     /**
