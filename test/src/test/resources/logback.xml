@@ -9,8 +9,8 @@
 <configuration>
     <property name="pattern"
               value="%date [%thread] %-5level %logger{40} KEY[%X{logPrefix}] - %msg%n"/>
-    <property name="appId" value="receiver.rmq.iapi.ymatou.com"/>
-    <property name="basePackage" value="com.ymatou.mq.rabbit.receiver"/>
+    <property name="appId" value="dispatcher.rmq.iapi.ymatou.com"/>
+    <property name="basePackage" value="com.ymatou.mq.rabbit.dispatcher"/>
     <property name="baseDir" value="/usr/local/log/${appId}"/>
 
     <property name="level" value="debug"/>
