@@ -6,6 +6,7 @@ import com.ymatou.mq.infrastructure.service.AsyncHttpInvokeService;
 import com.ymatou.mq.infrastructure.service.HttpInvokeResultService;
 import com.ymatou.mq.infrastructure.service.MessageConfigService;
 import com.ymatou.mq.infrastructure.service.MessageService;
+import com.ymatou.mq.infrastructure.support.ErrorReportClient;
 import com.ymatou.mq.infrastructure.support.enums.CallbackFromEnum;
 import com.ymatou.mq.infrastructure.support.enums.CompensateFromEnum;
 import com.ymatou.mq.infrastructure.support.enums.CompensateStatusEnum;
@@ -43,6 +44,9 @@ public class DispatchCallbackService implements HttpInvokeResultService {
 
     @Autowired
     private ActionFileQueueService actionFileQueueService;
+
+    @Autowired
+    private ErrorReportClient errorReportClient;
 
     @PostConstruct
     public void init(){
@@ -128,6 +132,8 @@ public class DispatchCallbackService implements HttpInvokeResultService {
             }
         } catch (Exception e) {
             logger.error("onInvokeFail proccess error.",e);
+        } finally {
+            errorReportClient.sendErrorReport(message,callbackConfig);
         }
     }
 
