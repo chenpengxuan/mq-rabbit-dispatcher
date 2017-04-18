@@ -24,7 +24,6 @@ import java.util.function.Function;
  * 操作指令文件列表处理service
  * Created by zhangzhihua on 2017/3/24.
  */
-@Component
 public class ActionFileQueueService implements Function<Pair<String, String>, Boolean>, PutExceptionHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(ActionFileQueueService.class);
