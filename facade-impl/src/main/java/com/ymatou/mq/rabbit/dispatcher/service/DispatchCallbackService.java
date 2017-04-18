@@ -192,7 +192,7 @@ public class DispatchCallbackService implements HttpInvokeResultService {
         //响应报文
         callbackResult.setResponse(result);
         //请求时间
-        callbackResult.setReqTime(message.getCreateTime());
+        callbackResult.setReqTime(message.getRequestTime());
         //响应时间
         callbackResult.setRespTime(new Date());
         //调用结果
@@ -223,7 +223,7 @@ public class DispatchCallbackService implements HttpInvokeResultService {
         //响应报文
         callbackResult.setResponse(message.getResponse());
         //请求时间
-        callbackResult.setReqTime(message.getCreateTime());
+        callbackResult.setReqTime(message.getRequestTime());
         //响应时间
         callbackResult.setRespTime(new Date());
         //调用结果
