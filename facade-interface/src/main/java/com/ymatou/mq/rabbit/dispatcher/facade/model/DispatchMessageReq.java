@@ -27,8 +27,8 @@ public class DispatchMessageReq extends BaseRequest {
     /**
      * 应用Id
      */
-    @NotEmpty(message = "appId not empty")
-    private String appId;
+    @NotEmpty(message = "app not empty")
+    private String app;
 
 
     /**
@@ -64,18 +64,12 @@ public class DispatchMessageReq extends BaseRequest {
         this.id = id;
     }
 
-    /**
-     * @return the appId
-     */
-    public String getAppId() {
-        return appId;
+    public String getApp() {
+        return app;
     }
 
-    /**
-     * @param appId the appId to set
-     */
-    public void setAppId(String appId) {
-        this.appId = appId;
+    public void setApp(String app) {
+        this.app = app;
     }
 
     /**

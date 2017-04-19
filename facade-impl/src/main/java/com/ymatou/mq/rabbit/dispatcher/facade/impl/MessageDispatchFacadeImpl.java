@@ -58,7 +58,7 @@ public class MessageDispatchFacadeImpl implements MessageDispatchFacade {
      */
     Message buildMessage(DispatchMessageReq req){
         Message msg = new Message();
-        msg.setAppId(req.getAppId());
+        msg.setAppId(req.getApp());
         msg.setQueueCode(req.getCode());
         if(StringUtils.isBlank(req.getId())){
             msg.setId(ObjectId.get().toString());
