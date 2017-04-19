@@ -106,6 +106,10 @@ public class MessageFileQueueService implements Function<Pair<String, String>, B
         try {
             QueueConfig queueConfig = messageConfigService.getQueueConfig(message.getAppId(),message.getQueueCode());
             for(CallbackConfig callbackConfig:queueConfig.getCallbackCfgList()){
+                //未开启则跳过
+                if(!queueConfig.getEnable() || !callbackConfig.getEnable()){
+                    continue;
+                }
                 dispatchCallbackService.invoke(convertMessage(message,callbackConfig.getCallbackKey()));
             }
             dispatchResult = true;
