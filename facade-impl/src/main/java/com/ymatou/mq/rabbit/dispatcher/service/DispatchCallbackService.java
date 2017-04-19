@@ -200,7 +200,7 @@ public class DispatchCallbackService implements HttpInvokeResultService {
         callbackResult.setMsgId(message.getId());
         callbackResult.setBizId(message.getBizId());
         //来源
-        callbackResult.setFrom(CallbackFromEnum.DISPATCH.ordinal());
+        callbackResult.setFrom(CallbackFromEnum.DISPATCH.getCode());
         //url
         callbackResult.setUrl(callbackConfig.getUrl());
         //请求报文
@@ -212,7 +212,7 @@ public class DispatchCallbackService implements HttpInvokeResultService {
         //响应时间
         callbackResult.setRespTime(new Date());
         //调用结果
-        callbackResult.setStatus(DispatchStatusEnum.SUCCESS.ordinal());
+        callbackResult.setStatus(DispatchStatusEnum.SUCCESS.getCode());
         return callbackResult;
     }
 
@@ -231,7 +231,7 @@ public class DispatchCallbackService implements HttpInvokeResultService {
         callbackResult.setMsgId(message.getId());
         callbackResult.setBizId(message.getBizId());
         //来源
-        callbackResult.setFrom(CallbackFromEnum.DISPATCH.ordinal());
+        callbackResult.setFrom(CallbackFromEnum.DISPATCH.getCode());
         //url
         callbackResult.setUrl(callbackConfig.getUrl());
         //请求报文
@@ -244,9 +244,9 @@ public class DispatchCallbackService implements HttpInvokeResultService {
         callbackResult.setRespTime(new Date());
         //调用结果
         if(isNeedCompensate){
-            callbackResult.setStatus(DispatchStatusEnum.COMPENSATE.ordinal());
+            callbackResult.setStatus(DispatchStatusEnum.COMPENSATE.getCode());
         }else{
-            callbackResult.setStatus(DispatchStatusEnum.FAIL.ordinal());
+            callbackResult.setStatus(DispatchStatusEnum.FAIL.getCode());
         }
         return callbackResult;
     }
@@ -266,8 +266,8 @@ public class DispatchCallbackService implements HttpInvokeResultService {
         messageCompensate.setConsumerId(callbackConfig.getCallbackKey());
         messageCompensate.setBizId(message.getBizId());
         messageCompensate.setBody(message.getBody());
-        messageCompensate.setSource(CompensateFromEnum.DISPATCH.ordinal());
-        messageCompensate.setStatus(CompensateStatusEnum.COMPENSATE.ordinal());
+        messageCompensate.setSource(CompensateFromEnum.DISPATCH.getCode());
+        messageCompensate.setStatus(CompensateStatusEnum.COMPENSATE.getCode());
         messageCompensate.setCreateTime(new Date());
         messageCompensate.setUpdateTime(new Date());
         messageCompensate.setNextTime(new Date());
