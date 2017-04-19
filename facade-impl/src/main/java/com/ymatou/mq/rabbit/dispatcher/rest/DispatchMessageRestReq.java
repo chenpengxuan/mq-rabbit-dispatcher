@@ -3,8 +3,9 @@
  *
  * All rights reserved.
  */
-package com.ymatou.mq.rabbit.dispatcher.facade.model;
+package com.ymatou.mq.rabbit.dispatcher.rest;
 
+import com.ymatou.mq.rabbit.dispatcher.facade.model.BaseRequest;
 import org.hibernate.validator.constraints.NotEmpty;
 
 import javax.validation.constraints.NotNull;
@@ -15,7 +16,7 @@ import javax.validation.constraints.NotNull;
  * @author wangxudong 2016年7月27日 下午6:51:48
  *
  */
-public class DispatchMessageReq extends BaseRequest {
+public class DispatchMessageRestReq extends BaseRequest {
 
     private static final long serialVersionUID = 1L;
 
@@ -25,10 +26,10 @@ public class DispatchMessageReq extends BaseRequest {
     private String id;
 
     /**
-     * 应用Id，因可能走dubbo原因，appId无法传递，facade接口appId改为app,rest接口仍为appId
+     * 应用Id
      */
-    @NotEmpty(message = "app not empty")
-    private String app;
+    @NotEmpty(message = "appId not empty")
+    private String appId;
 
 
     /**
@@ -64,12 +65,14 @@ public class DispatchMessageReq extends BaseRequest {
         this.id = id;
     }
 
-    public String getApp() {
-        return app;
+    @Override
+    public String getAppId() {
+        return appId;
     }
 
-    public void setApp(String app) {
-        this.app = app;
+    @Override
+    public void setAppId(String appId) {
+        this.appId = appId;
     }
 
     /**

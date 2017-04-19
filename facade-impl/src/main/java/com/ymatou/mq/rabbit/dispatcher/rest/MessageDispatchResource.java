@@ -21,6 +21,6 @@ public interface MessageDispatchResource {
      * @param req
      * @return
      */
-    public DispatchMessageResp dispatch(DispatchMessageReq req);
+    public DispatchMessageResp dispatch(DispatchMessageRestReq req);
 
 }
