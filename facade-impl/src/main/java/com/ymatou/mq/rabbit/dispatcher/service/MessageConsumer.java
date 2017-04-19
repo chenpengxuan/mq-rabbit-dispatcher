@@ -75,10 +75,10 @@ public class MessageConsumer implements Consumer{
         //TODO 可调整conn/channel对应的数量关系
         ChannelWrapper masterChannelWrapper = RabbitChannelFactory.createChannelWrapper(cluster,rabbitConfig);
         channel = masterChannelWrapper.getChannel();
-        //TODO 处理channel关闭事件
         channel.addShutdownListener(new ShutdownListener() {
             @Override
             public void shutdownCompleted(ShutdownSignalException cause) {
+                //TODO 处理channel关闭事件
                 logger.error("shutdownCompleted,cause:" + cause);
             }
         });
