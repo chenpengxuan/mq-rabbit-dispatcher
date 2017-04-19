@@ -92,29 +92,33 @@ public class MessageFileQueueService implements Function<Pair<String, String>, B
     public Boolean apply(Pair<String, String> pair) {
         boolean saveMsgResult = false;
         boolean dispatchResult = false;
+        Message message = Message.fromJson(pair.getValue());
+
+        //写消息
         try {
-            //消费数据
-            Message message = Message.fromJson(pair.getValue());
-            //插消息
             messageService.saveMessage(message);
             saveMsgResult = true;
+        } catch (Exception e) {
+            logger.error("save message error", e);
+        }
 
-            //进行回调
+        //分发回调
+        try {
             QueueConfig queueConfig = messageConfigService.getQueueConfig(message.getAppId(),message.getQueueCode());
             for(CallbackConfig callbackConfig:queueConfig.getCallbackCfgList()){
                 dispatchCallbackService.invoke(convertMessage(message,callbackConfig.getCallbackKey()));
             }
             dispatchResult = true;
         } catch (Exception e) {
-            logger.error("save message or dispatch error", e);
-            //若写消息或分发有一个成功，则返回true
-            if(dispatchResult || saveMsgResult){
-                return true;
-            }else{
-                return false;
-            }
+            logger.error("dispatch message error", e);
         }
-        return true;
+
+        //若写消息或分发有一个成功，则返回true
+        if(dispatchResult || saveMsgResult){
+            return true;
+        }else{
+            return false;
+        }
     }
 
     /**
