@@ -63,17 +63,6 @@ public class ConfigReloadService implements ConfigReloadListener {
         for(AppConfig appConfig:MessageConfigService.appConfigMap.values()){
             for(QueueConfig queueConfig:appConfig.getMessageCfgList()){
                 for(CallbackConfig callbackConfig:queueConfig.getCallbackCfgList()){
-                    //若配置关停，但目前存在运行着的messageConsumer则关停释放
-                    if(!queueConfig.getEnable() || !callbackConfig.getEnable()){
-                        for(String cluster:clusters){
-                            String messageConsumerId = String.format("%s_%s",callbackConfig.getCallbackKey(),cluster);
-                            if(messageConsumerMap.containsKey(messageConsumerId)){
-                                logger.info("release message consumer {}",messageConsumerId);
-                                messageConsumerManager.stopConsumer(callbackConfig.getCallbackKey(),cluster);
-                            }
-                        }
-                    }
-
                     //若配置开启，但目前没有运行着的messageConsumer则启动
                     if(queueConfig.getEnable() && callbackConfig.getEnable()){
                         for(String cluster:clusters){
@@ -81,6 +70,15 @@ public class ConfigReloadService implements ConfigReloadListener {
                             if(messageConsumerMap.get(messageConsumerId) == null){
                                 logger.info("start message consumer callbackKey:{},cluster:{}",callbackConfig.getCallbackKey(),cluster);
                                 messageConsumerManager.startConsumer(appConfig.getAppId(),queueConfig.getCode(),callbackConfig.getCallbackKey(),cluster);
+                            }
+                        }
+                    } else {
+                        //若配置关停，但目前存在运行着的messageConsumer则关停释放
+                        for(String cluster:clusters){
+                            String messageConsumerId = String.format("%s_%s",callbackConfig.getCallbackKey(),cluster);
+                            if(messageConsumerMap.containsKey(messageConsumerId)){
+                                logger.info("release message consumer {}",messageConsumerId);
+                                messageConsumerManager.stopConsumer(callbackConfig.getCallbackKey(),cluster);
                             }
                         }
                     }
