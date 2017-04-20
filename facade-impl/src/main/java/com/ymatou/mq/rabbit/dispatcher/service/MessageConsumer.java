@@ -8,6 +8,7 @@ import com.ymatou.mq.rabbit.config.RabbitConfig;
 import com.ymatou.mq.rabbit.support.ChannelWrapper;
 import com.ymatou.mq.rabbit.support.RabbitConstants;
 import org.apache.commons.lang.SerializationUtils;
+import org.aspectj.weaver.ast.Call;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -103,24 +104,33 @@ public class MessageConsumer implements Consumer{
         logger.debug("consumerTag:{},envelope:{},properties:{}.",consumerTag,envelope,properties);
 
         try {
-            CallbackMessage callbackMessage = new CallbackMessage();
-            callbackMessage.setAppId(appId);
-            callbackMessage.setQueueCode(queueCode);
-            callbackMessage.setCallbackKey(callbackKey);
-            String msgId = properties.getMessageId();
-            callbackMessage.setId(msgId);
-            String bizId = properties.getCorrelationId();
-            callbackMessage.setBizId(bizId);
             //FIXME:编码格式要跟receiver一致，都明确设为"UTF-8"??
-            String sbody = (String) SerializationUtils.deserialize(body);
-            callbackMessage.setBody(sbody);
-
+            Message message = (Message) SerializationUtils.deserialize(body);
+            CallbackMessage callbackMessage = toCallbackMessage(message);
             dispatchCallbackService.invoke(callbackMessage);
         } catch (Exception e) {
             logger.error("handleDelivery message error,consumerTag:{},envelope:{},properties:{}.",consumerTag,envelope,properties,e);
         } finally {
             channel.basicAck(envelope.getDeliveryTag(),false);
         }
+    }
+
+    /**
+     * 转化为callback message
+     * @param message
+     * @return
+     */
+    CallbackMessage toCallbackMessage(Message message){
+        CallbackMessage callbackMessage = new CallbackMessage();
+        callbackMessage.setAppId(appId);
+        callbackMessage.setQueueCode(queueCode);
+        callbackMessage.setCallbackKey(callbackKey);
+        callbackMessage.setId(message.getId());
+        callbackMessage.setBizId(message.getBizId());
+        callbackMessage.setBody(message.getBody());
+        callbackMessage.setClientIp(message.getClientIp());
+        callbackMessage.setRecvIp(message.getRecvIp());
+        return callbackMessage;
     }
 
     @Override
