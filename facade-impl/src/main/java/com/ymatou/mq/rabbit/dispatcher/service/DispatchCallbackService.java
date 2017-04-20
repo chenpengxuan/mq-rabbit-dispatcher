@@ -36,6 +36,13 @@ public class DispatchCallbackService implements HttpInvokeResultService {
 
     public static final String MONITOR_APP_ID = "mqmonitor.iapi.ymatou.com";
 
+    /**
+     * 每个回调key url的业务性能监控
+     */
+    public static final String MONITOR_CALLBACK_KEY_URL_APP_ID = "mqmonitor.callbackkeyurl.iapi.ymatou.com";
+
+
+
     @Autowired
     private MessageConfigService messageConfigService;
 
@@ -50,8 +57,12 @@ public class DispatchCallbackService implements HttpInvokeResultService {
 
     @PostConstruct
     public void init(){
+        //更新分发明细事件监听
         String key = String.format("%s_%d", ActionConstants.ENTITY_DISPATCH, ActionConstants.ACTION_TYPE_UPDATE);
         actionFileQueueService.addActionListener(key,new UpdateDetailActionListener());
+        //插入补单事件监听
+        key = String.format("%s_%d", ActionConstants.ENTITY_COMPENSATE, ActionConstants.ACTION_TYPE_INSERT);
+        actionFileQueueService.addActionListener(key,new InsertCompensateActionListener());
     }
 
     /**
@@ -79,7 +90,6 @@ public class DispatchCallbackService implements HttpInvokeResultService {
     void doInvokeOne(CallbackMessage callbackMessage,CallbackConfig callbackConfig,Long timeout){
         long startTime = System.currentTimeMillis();
 
-        //
         try {
             //async http send
             new AsyncHttpInvokeService(callbackMessage,callbackConfig,this).send();
@@ -90,23 +100,23 @@ public class DispatchCallbackService implements HttpInvokeResultService {
         // 上报分发回调性能数据
         //FIXME: 上报的应该是callback url真正的耗时。。。
         long consumedTime = System.currentTimeMillis() - startTime;
-        //FIXME: seviceid 应该是callback url
+        //FIXME: seviceid  应该是callbackurl
         PerformanceStatisticContainer.add(consumedTime, String.format("%s.dispatch", callbackConfig.getCallbackKey()),
                 MONITOR_APP_ID);
     }
 
     /**
-     *
-     * @param message
+     *  @param callbackMessage
      * @param callbackConfig
      */
     @Override
-    public void onInvokeSuccess(CallbackMessage message,CallbackConfig callbackConfig){
+    public void onInvokeSuccess(CallbackMessage callbackMessage, CallbackConfig callbackConfig){
         try {
+            //TODO 插消息???
             //更新分发明细状态
-            CallbackResult callbackResult = this.buildCallbackResult(message,callbackConfig,message.getResponse());
-            //FIXME：应该插指令，另外主体表中无记录，则插入
-            messageService.updateDispatchDetail(callbackResult);
+            CallbackResult callbackResult = this.buildCallbackResult(callbackMessage,callbackConfig, callbackMessage.getResponse());
+            Action action = buildAction(ActionConstants.ENTITY_DISPATCH, ActionConstants.ACTION_TYPE_UPDATE,callbackResult);
+            actionFileQueueService.saveActionToFileDb(action);
         } catch (Exception e) {
             logger.error("onInvokeSuccess proccess error.",e);
         }
@@ -124,12 +134,12 @@ public class DispatchCallbackService implements HttpInvokeResultService {
             if(isNeedInsertCompensate){//若需要插补单
                 //插补单
                 MessageCompensate messageCompensate = this.buildCompensate(message,callbackConfig);
-                //FIXME:应该是入文件队列
-                messageService.insertCompensate(messageCompensate);
+                Action action = buildAction(ActionConstants.ENTITY_COMPENSATE, ActionConstants.ACTION_TYPE_INSERT,messageCompensate);
+                actionFileQueueService.saveActionToFileDb(action);
 
                 //更新分发明细状态
                 CallbackResult callbackResult = this.buildCallbackResult(message,callbackConfig,true);
-                Action action = buildAction(ActionConstants.ENTITY_DISPATCH, ActionConstants.ACTION_TYPE_UPDATE,callbackResult);
+                action = buildAction(ActionConstants.ENTITY_DISPATCH, ActionConstants.ACTION_TYPE_UPDATE,callbackResult);
                 actionFileQueueService.saveActionToFileDb(action);
             }else{//若不需要插补单
                 //更新分发明细状态
@@ -146,15 +156,15 @@ public class DispatchCallbackService implements HttpInvokeResultService {
 
     /**
      * 构造action
-     * @param callbackResult
+     * @param obj
      * @return
      */
-    Action buildAction(String entity,int actionType,CallbackResult callbackResult){
+    Action buildAction(String entity, int actionType, Object obj){
         Action action = new Action();
         action.setEntity(entity);
         action.setActionType(actionType);
         action.setId(ObjectId.get().toString());
-        action.setObj(callbackResult);
+        action.setObj(obj);
         return action;
     }
 
@@ -195,28 +205,28 @@ public class DispatchCallbackService implements HttpInvokeResultService {
 
     /**
      * 构造回调结果，正常响应的情况
-     * @param message
+     * @param callbackMessage
      * @param callbackConfig
      * @param result
      * @return
      */
-    CallbackResult buildCallbackResult(CallbackMessage message,CallbackConfig callbackConfig,String result) throws IOException {
+    CallbackResult buildCallbackResult(CallbackMessage callbackMessage, CallbackConfig callbackConfig, String result) throws IOException {
         CallbackResult callbackResult = new CallbackResult();
-        callbackResult.setAppId(message.getAppId());
-        callbackResult.setQueueCode(message.getQueueCode());
+        callbackResult.setAppId(callbackMessage.getAppId());
+        callbackResult.setQueueCode(callbackMessage.getQueueCode());
         callbackResult.setConsumerId(callbackConfig.getCallbackKey());
-        callbackResult.setMsgId(message.getId());
-        callbackResult.setBizId(message.getBizId());
+        callbackResult.setMsgId(callbackMessage.getId());
+        callbackResult.setBizId(callbackMessage.getBizId());
         //来源
         callbackResult.setFrom(CallbackFromEnum.DISPATCH.getCode());
         //url
         callbackResult.setUrl(callbackConfig.getUrl());
         //请求报文
-        callbackResult.setRequest(message.getBody());
+        callbackResult.setRequest(callbackMessage.getBody());
         //响应报文
         callbackResult.setResponse(result);
         //请求时间
-        callbackResult.setReqTime(message.getRequestTime());
+        callbackResult.setReqTime(callbackMessage.getRequestTime());
         //响应时间
         callbackResult.setRespTime(new Date());
         //调用结果
@@ -226,28 +236,28 @@ public class DispatchCallbackService implements HttpInvokeResultService {
 
     /**
      * 构造回调结果，响应异常或无响应的
-     * @param message
+     * @param callbackMessage
      * @param callbackConfig
      * @param isNeedCompensate
      * @return
      */
-    CallbackResult buildCallbackResult(CallbackMessage message,CallbackConfig callbackConfig,boolean isNeedCompensate){
+    CallbackResult buildCallbackResult(CallbackMessage callbackMessage, CallbackConfig callbackConfig, boolean isNeedCompensate){
         CallbackResult callbackResult = new CallbackResult();
-        callbackResult.setAppId(message.getAppId());
-        callbackResult.setQueueCode(message.getQueueCode());
+        callbackResult.setAppId(callbackMessage.getAppId());
+        callbackResult.setQueueCode(callbackMessage.getQueueCode());
         callbackResult.setConsumerId(callbackConfig.getCallbackKey());
-        callbackResult.setMsgId(message.getId());
-        callbackResult.setBizId(message.getBizId());
+        callbackResult.setMsgId(callbackMessage.getId());
+        callbackResult.setBizId(callbackMessage.getBizId());
         //来源
         callbackResult.setFrom(CallbackFromEnum.DISPATCH.getCode());
         //url
         callbackResult.setUrl(callbackConfig.getUrl());
         //请求报文
-        callbackResult.setRequest(message.getResponse());
+        callbackResult.setRequest(callbackMessage.getResponse());
         //响应报文
-        callbackResult.setResponse(message.getResponse());
+        callbackResult.setResponse(callbackMessage.getResponse());
         //请求时间
-        callbackResult.setReqTime(message.getRequestTime());
+        callbackResult.setReqTime(callbackMessage.getRequestTime());
         //响应时间
         callbackResult.setRespTime(new Date());
         //调用结果
@@ -289,9 +299,22 @@ public class DispatchCallbackService implements HttpInvokeResultService {
 
         @Override
         public void execute(Object obj) {
-            logger.info("execute updateDetail action...");
+            logger.debug("execute updateDetail action...");
             CallbackResult callbackResult = JSON.parseObject(String.valueOf(obj),CallbackResult.class);
             messageService.updateDispatchDetail(callbackResult);
+        }
+    }
+
+    /**
+     * 插入补单
+     */
+    class InsertCompensateActionListener implements ActionListener{
+
+        @Override
+        public void execute(Object obj) {
+            logger.debug("execute insertCompensate action...");
+            MessageCompensate messageCompensate = JSON.parseObject(String.valueOf(obj),MessageCompensate.class);
+            messageService.insertCompensate(messageCompensate);
         }
     }
 

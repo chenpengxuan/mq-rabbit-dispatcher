@@ -72,11 +72,8 @@ public class MessageConsumer implements Consumer{
      * 启动消费监听
      */
     public void start() throws IOException {
-        //TODO 可调整conn/channel对应的数量关系
         ChannelWrapper masterChannelWrapper = RabbitChannelFactory.createChannelWrapper(cluster,rabbitConfig);
         channel = masterChannelWrapper.getChannel();
-        //TODO 处理channel关闭事件
-        //FIXME:不需要吧
         channel.addShutdownListener(new ShutdownListener() {
             @Override
             public void shutdownCompleted(ShutdownSignalException cause) {
@@ -102,8 +99,7 @@ public class MessageConsumer implements Consumer{
 
     @Override
     public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
-        //FIXME: debug级别，否则日志太多。。。。
-        logger.info("consumerTag:{},envelope:{},properties:{}.",consumerTag,envelope,properties);
+        logger.debug("consumerTag:{},envelope:{},properties:{}.",consumerTag,envelope,properties);
 
         try {
             CallbackMessage callbackMessage = new CallbackMessage();
@@ -122,7 +118,6 @@ public class MessageConsumer implements Consumer{
         } catch (Exception e) {
             logger.error("handleDelivery message error,consumerTag:{},envelope:{},properties:{}.",consumerTag,envelope,properties,e);
         } finally {
-            //TODO 更新消息状态为consumed
             channel.basicAck(envelope.getDeliveryTag(),false);
         }
     }
