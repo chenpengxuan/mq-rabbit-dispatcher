@@ -68,7 +68,6 @@ public class MessageDispatchFacadeImpl implements MessageDispatchFacade {
         msg.setAppId(req.getApp());
         msg.setQueueCode(req.getCode());
 
-        //FIXME:外部应该不能指定内部真正使用的ID!!
         if(StringUtils.isBlank(req.getId())){
             msg.setId(ObjectId.get().toString());
         }else{
