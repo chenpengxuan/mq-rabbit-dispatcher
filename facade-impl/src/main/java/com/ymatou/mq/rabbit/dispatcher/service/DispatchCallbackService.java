@@ -102,6 +102,7 @@ public class DispatchCallbackService implements HttpInvokeResultService {
         try {
             //更新分发明细状态
             CallbackResult callbackResult = this.buildCallbackResult(message,callbackConfig,message.getResponse());
+            //FIXME：应该插指令
             messageService.updateDispatchDetail(callbackResult);
         } catch (Exception e) {
             logger.error("onInvokeSuccess proccess error.",e);
