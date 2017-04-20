@@ -6,18 +6,11 @@ import com.ymatou.mq.infrastructure.model.Message;
 import com.ymatou.mq.rabbit.RabbitChannelFactory;
 import com.ymatou.mq.rabbit.config.RabbitConfig;
 import com.ymatou.mq.rabbit.support.ChannelWrapper;
-import com.ymatou.mq.rabbit.support.RabbitConstants;
 import org.apache.commons.lang.SerializationUtils;
-import org.aspectj.weaver.ast.Call;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
 
 import java.io.IOException;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * rabbit consumer
@@ -48,6 +41,11 @@ public class MessageConsumer implements Consumer{
     private String cluster;
 
     /**
+     * channel wrapper
+     */
+    private ChannelWrapper channelWrapper;
+
+    /**
      * 集群通道
      */
     private Channel channel;
@@ -73,8 +71,9 @@ public class MessageConsumer implements Consumer{
      * 启动消费监听
      */
     public void start() throws IOException {
-        ChannelWrapper masterChannelWrapper = RabbitChannelFactory.createChannelWrapper(cluster,rabbitConfig);
-        channel = masterChannelWrapper.getChannel();
+        ChannelWrapper channelWrapper = RabbitChannelFactory.createChannelWrapper(cluster,rabbitConfig);
+        this.channelWrapper = channelWrapper;
+        channel = channelWrapper.getChannel();
         channel.addShutdownListener(new ShutdownListener() {
             @Override
             public void shutdownCompleted(ShutdownSignalException cause) {
@@ -90,12 +89,7 @@ public class MessageConsumer implements Consumer{
     public void stop(){
         logger.info("close message consumer callbackKey:{},cluster:{}",callbackKey,cluster);
         if(channel != null && channel.isOpen()){
-            try {
-                //FIXME:不仅仅只关闭channel
-                channel.close();
-            } catch (Exception e) {
-                logger.error("close channel error.",e);
-            }
+            RabbitChannelFactory.releaseChannelWrapper(cluster,channelWrapper);
         }
     }
 
