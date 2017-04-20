@@ -76,10 +76,11 @@ public class MessageConsumer implements Consumer{
         ChannelWrapper masterChannelWrapper = RabbitChannelFactory.createChannelWrapper(cluster,rabbitConfig);
         channel = masterChannelWrapper.getChannel();
         //TODO 处理channel关闭事件
+        //FIXME:不需要吧
         channel.addShutdownListener(new ShutdownListener() {
             @Override
             public void shutdownCompleted(ShutdownSignalException cause) {
-                logger.error("shutdownCompleted,cause:" + cause);
+                logger.error("One rabbitmq channel shutdownCompleted ", cause);
             }
         });
         channel.basicConsume(callbackKey,false,this);
@@ -101,6 +102,7 @@ public class MessageConsumer implements Consumer{
 
     @Override
     public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
+        //FIXME: debug级别，否则日志太多。。。。
         logger.info("consumerTag:{},envelope:{},properties:{}.",consumerTag,envelope,properties);
 
         try {
@@ -112,10 +114,9 @@ public class MessageConsumer implements Consumer{
             callbackMessage.setId(msgId);
             String bizId = properties.getCorrelationId();
             callbackMessage.setBizId(bizId);
+            //FIXME:编码格式要跟receiver一致，都明确设为"UTF-8"??
             String sbody = (String) SerializationUtils.deserialize(body);
             callbackMessage.setBody(sbody);
-
-            //MDC.put("logPrefix", "MessageConsumer|" + bizId);
 
             dispatchCallbackService.invoke(callbackMessage);
         } catch (Exception e) {

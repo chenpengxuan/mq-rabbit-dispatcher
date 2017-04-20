@@ -85,7 +85,9 @@ public class DispatchCallbackService implements HttpInvokeResultService {
         }
 
         // 上报分发回调性能数据
+        //FIXME: 上报的应该是callback url真正的耗时。。。
         long consumedTime = System.currentTimeMillis() - startTime;
+        //FIXME: seviceid 应该是callback url
         PerformanceStatisticContainer.add(consumedTime, String.format("%s.dispatch", callbackConfig.getCallbackKey()),
                 MONITOR_APP_ID);
     }
