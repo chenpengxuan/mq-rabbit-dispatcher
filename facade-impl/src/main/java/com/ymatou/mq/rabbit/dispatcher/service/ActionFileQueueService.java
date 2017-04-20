@@ -60,6 +60,7 @@ public class ActionFileQueueService implements Function<Pair<String, String>, Bo
 
 
     /**
+     * FIXME:极端情况，写文件失败，直接insert/update mongo??
      * 保存指令到文件队列
      * @param action
      */
