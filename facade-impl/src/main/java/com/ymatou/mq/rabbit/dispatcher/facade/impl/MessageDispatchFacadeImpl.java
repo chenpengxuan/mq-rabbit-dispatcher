@@ -44,6 +44,7 @@ public class MessageDispatchFacadeImpl implements MessageDispatchFacade {
         //接收发布消息
         messageDispatchService.dispatch(msg);
 
+        //FIXME:总是返回true??? 上一步可能返回false
         //返回
         DispatchMessageResp resp = new DispatchMessageResp();
         resp.setUuid(msg.getId());
