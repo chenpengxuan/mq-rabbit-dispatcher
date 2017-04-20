@@ -20,6 +20,7 @@ public class DispatchMessageReq extends BaseRequest {
     private static final long serialVersionUID = 1L;
 
     /**
+     * FIXME:这个外部应该不能传！！
      * 消息id，若调用方不传则生成
      */
     private String id;

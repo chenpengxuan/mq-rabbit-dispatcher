@@ -65,6 +65,8 @@ public class DispatchCallbackService implements HttpInvokeResultService {
             return;
         }
 
+        //FIXME 只有启用了 或 当前 是stg + onlyStgEnbale
+
         doInvokeOne(callbackMessage,callbackConfig,null);
     }
 
@@ -77,6 +79,7 @@ public class DispatchCallbackService implements HttpInvokeResultService {
     void doInvokeOne(CallbackMessage callbackMessage,CallbackConfig callbackConfig,Long timeout){
         long startTime = System.currentTimeMillis();
 
+        //
         try {
             //async http send
             new AsyncHttpInvokeService(callbackMessage,callbackConfig,this).send();
@@ -85,7 +88,9 @@ public class DispatchCallbackService implements HttpInvokeResultService {
         }
 
         // 上报分发回调性能数据
+        //FIXME: 上报的应该是callback url真正的耗时。。。
         long consumedTime = System.currentTimeMillis() - startTime;
+        //FIXME: seviceid 应该是callback url
         PerformanceStatisticContainer.add(consumedTime, String.format("%s.dispatch", callbackConfig.getCallbackKey()),
                 MONITOR_APP_ID);
     }
@@ -100,6 +105,7 @@ public class DispatchCallbackService implements HttpInvokeResultService {
         try {
             //更新分发明细状态
             CallbackResult callbackResult = this.buildCallbackResult(message,callbackConfig,message.getResponse());
+            //FIXME：应该插指令，另外主体表中无记录，则插入
             messageService.updateDispatchDetail(callbackResult);
         } catch (Exception e) {
             logger.error("onInvokeSuccess proccess error.",e);
@@ -118,6 +124,7 @@ public class DispatchCallbackService implements HttpInvokeResultService {
             if(isNeedInsertCompensate){//若需要插补单
                 //插补单
                 MessageCompensate messageCompensate = this.buildCompensate(message,callbackConfig);
+                //FIXME:应该是入文件队列
                 messageService.insertCompensate(messageCompensate);
 
                 //更新分发明细状态
@@ -152,6 +159,7 @@ public class DispatchCallbackService implements HttpInvokeResultService {
     }
 
     /**
+     * FIXME :使用 callbackConfig.isCallbackEnable()
      * 判断是否需要插补单记录，开启配置&开启消息存储&开启补单
      * @param callbackConfig
      * @return
