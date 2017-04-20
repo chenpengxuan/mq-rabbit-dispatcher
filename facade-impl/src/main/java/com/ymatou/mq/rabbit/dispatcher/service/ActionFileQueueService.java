@@ -122,7 +122,6 @@ public class ActionFileQueueService implements Function<Pair<String, String>, Bo
 
     @Override
     public void handleException(String key, String value, Optional<Throwable> throwable) {
-        //TODO 处理写失败
         logger.error("handleException occur key:{},value:{}",key,value,throwable);
     }
 
