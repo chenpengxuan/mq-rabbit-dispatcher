@@ -295,6 +295,7 @@ public class DispatchCallbackService implements HttpInvokeResultService {
     }
 
     /**
+     * FIXME:作为一个整体塞到其他两个Action中去
      * 插入消息操作监听
      */
     class InsertMessageActionListener implements ActionListener{
