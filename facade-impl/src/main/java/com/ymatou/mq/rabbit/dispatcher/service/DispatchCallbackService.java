@@ -153,6 +153,7 @@ public class DispatchCallbackService implements HttpInvokeResultService {
         } catch (Exception e) {
             logger.error("onInvokeFail proccess error.",e);
         } finally {
+            //FIXME:需要吗？？
             errorReportClient.sendErrorReport(callbackMessage,callbackConfig);
         }
     }
