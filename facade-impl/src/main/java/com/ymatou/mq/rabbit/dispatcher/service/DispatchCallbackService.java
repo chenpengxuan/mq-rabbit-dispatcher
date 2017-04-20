@@ -41,8 +41,6 @@ public class DispatchCallbackService implements HttpInvokeResultService {
      */
     public static final String MONITOR_CALLBACK_KEY_URL_APP_ID = "mqmonitor.callbackkeyurl.iapi.ymatou.com";
 
-
-
     @Autowired
     private MessageConfigService messageConfigService;
 
@@ -57,9 +55,14 @@ public class DispatchCallbackService implements HttpInvokeResultService {
 
     @PostConstruct
     public void init(){
+        //插消息事件监听
+        String key = String.format("%s_%d", ActionConstants.ENTITY_MESSAGE, ActionConstants.ACTION_TYPE_INSERT);
+        actionFileQueueService.addActionListener(key,new InsertMessageActionListener());
+
         //更新分发明细事件监听
-        String key = String.format("%s_%d", ActionConstants.ENTITY_DISPATCH, ActionConstants.ACTION_TYPE_UPDATE);
+        key = String.format("%s_%d", ActionConstants.ENTITY_DISPATCH, ActionConstants.ACTION_TYPE_UPDATE);
         actionFileQueueService.addActionListener(key,new UpdateDetailActionListener());
+
         //插入补单事件监听
         key = String.format("%s_%d", ActionConstants.ENTITY_COMPENSATE, ActionConstants.ACTION_TYPE_INSERT);
         actionFileQueueService.addActionListener(key,new InsertCompensateActionListener());
@@ -76,9 +79,9 @@ public class DispatchCallbackService implements HttpInvokeResultService {
             return;
         }
 
-        //FIXME 只有启用了 或 当前 是stg + onlyStgEnbale
-
-        doInvokeOne(callbackMessage,callbackConfig,null);
+        if(callbackConfig.isDispatchEnable()){
+            doInvokeOne(callbackMessage,callbackConfig,null);
+        }
     }
 
     /**
@@ -112,10 +115,14 @@ public class DispatchCallbackService implements HttpInvokeResultService {
     @Override
     public void onInvokeSuccess(CallbackMessage callbackMessage, CallbackConfig callbackConfig){
         try {
-            //TODO 插消息???
+            //插消息
+            Message message = buildMessage(callbackMessage,callbackConfig);
+            Action action = buildAction(ActionConstants.ENTITY_MESSAGE, ActionConstants.ACTION_TYPE_INSERT,message);
+            actionFileQueueService.saveActionToFileDb(action);
+
             //更新分发明细状态
             CallbackResult callbackResult = this.buildCallbackResult(callbackMessage,callbackConfig, callbackMessage.getResponse());
-            Action action = buildAction(ActionConstants.ENTITY_DISPATCH, ActionConstants.ACTION_TYPE_UPDATE,callbackResult);
+            action = buildAction(ActionConstants.ENTITY_DISPATCH, ActionConstants.ACTION_TYPE_UPDATE,callbackResult);
             actionFileQueueService.saveActionToFileDb(action);
         } catch (Exception e) {
             logger.error("onInvokeSuccess proccess error.",e);
@@ -123,35 +130,57 @@ public class DispatchCallbackService implements HttpInvokeResultService {
     }
 
     /**
-     *
-     * @param message
+     *  @param callbackMessage
      * @param callbackConfig
      */
     @Override
-    public void onInvokeFail(CallbackMessage message,CallbackConfig callbackConfig){
+    public void onInvokeFail(CallbackMessage callbackMessage, CallbackConfig callbackConfig){
         try {
-            boolean isNeedInsertCompensate = this.isNeedInsertCompensate(callbackConfig);
-            if(isNeedInsertCompensate){//若需要插补单
+            //插消息
+            Message message = buildMessage(callbackMessage,callbackConfig);
+            Action action = buildAction(ActionConstants.ENTITY_MESSAGE, ActionConstants.ACTION_TYPE_INSERT,message);
+            actionFileQueueService.saveActionToFileDb(action);
+
+            if(callbackConfig.isCompensateEnable()){//若需要插补单
                 //插补单
-                MessageCompensate messageCompensate = this.buildCompensate(message,callbackConfig);
-                Action action = buildAction(ActionConstants.ENTITY_COMPENSATE, ActionConstants.ACTION_TYPE_INSERT,messageCompensate);
+                MessageCompensate messageCompensate = this.buildCompensate(callbackMessage,callbackConfig);
+                action = buildAction(ActionConstants.ENTITY_COMPENSATE, ActionConstants.ACTION_TYPE_INSERT,messageCompensate);
                 actionFileQueueService.saveActionToFileDb(action);
 
                 //更新分发明细状态
-                CallbackResult callbackResult = this.buildCallbackResult(message,callbackConfig,true);
+                CallbackResult callbackResult = this.buildCallbackResult(callbackMessage,callbackConfig,true);
                 action = buildAction(ActionConstants.ENTITY_DISPATCH, ActionConstants.ACTION_TYPE_UPDATE,callbackResult);
                 actionFileQueueService.saveActionToFileDb(action);
             }else{//若不需要插补单
                 //更新分发明细状态
-                CallbackResult callbackResult = this.buildCallbackResult(message,callbackConfig,false);
-                Action action = buildAction(ActionConstants.ENTITY_DISPATCH, ActionConstants.ACTION_TYPE_UPDATE,callbackResult);
+                CallbackResult callbackResult = this.buildCallbackResult(callbackMessage,callbackConfig,false);
+                action = buildAction(ActionConstants.ENTITY_DISPATCH, ActionConstants.ACTION_TYPE_UPDATE,callbackResult);
                 actionFileQueueService.saveActionToFileDb(action);
             }
         } catch (Exception e) {
             logger.error("onInvokeFail proccess error.",e);
         } finally {
-            errorReportClient.sendErrorReport(message,callbackConfig);
+            errorReportClient.sendErrorReport(callbackMessage,callbackConfig);
         }
+    }
+
+    /**
+     * 构造message
+     * @param callbackMessage
+     * @param callbackConfig
+     * @return
+     */
+    Message buildMessage(CallbackMessage callbackMessage,CallbackConfig callbackConfig){
+        Message message = new Message();
+        message.setAppId(callbackMessage.getAppId());
+        message.setQueueCode(callbackMessage.getQueueCode());
+        message.setId(callbackMessage.getId());
+        message.setBizId(callbackMessage.getBizId());
+        message.setBody(callbackMessage.getBody());
+        message.setClientIp(callbackMessage.getClientIp());
+        message.setRecvIp(callbackMessage.getRecvIp());
+        message.setCreateTime(callbackMessage.getCreateTime());
+        return message;
     }
 
     /**
@@ -166,26 +195,6 @@ public class DispatchCallbackService implements HttpInvokeResultService {
         action.setId(ObjectId.get().toString());
         action.setObj(obj);
         return action;
-    }
-
-    /**
-     * FIXME :使用 callbackConfig.isCallbackEnable()
-     * 判断是否需要插补单记录，开启配置&开启消息存储&开启补单
-     * @param callbackConfig
-     * @return
-     */
-    boolean isNeedInsertCompensate(CallbackConfig callbackConfig){
-        //若队列配置、回调配置开启
-        if(callbackConfig.getQueueConfig().getEnable() && callbackConfig.getEnable()){
-            //若队列配置开启消息存储
-            if(callbackConfig.getQueueConfig().getEnableLog()){
-                //若开启补单
-                if(callbackConfig.getIsRetry() != null && callbackConfig.getIsRetry() > 0){
-                    return true;
-                }
-            }
-        }
-        return false;
     }
 
     /**
@@ -290,6 +299,19 @@ public class DispatchCallbackService implements HttpInvokeResultService {
         messageCompensate.setUpdateTime(new Date());
         messageCompensate.setNextTime(new Date());
         return messageCompensate;
+    }
+
+    /**
+     * 插入消息操作监听
+     */
+    class InsertMessageActionListener implements ActionListener{
+
+        @Override
+        public void execute(Object obj) {
+            logger.debug("execute insertMessage action...");
+            Message message = JSON.parseObject(String.valueOf(obj),Message.class);
+            messageService.saveMessage(message);
+        }
     }
 
     /**

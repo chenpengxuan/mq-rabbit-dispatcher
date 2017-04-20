@@ -15,6 +15,7 @@ import com.ymatou.mq.infrastructure.util.NetUtil;
 import com.ymatou.mq.rabbit.dispatcher.facade.MessageDispatchFacade;
 import com.ymatou.mq.rabbit.dispatcher.facade.model.DispatchMessageReq;
 import com.ymatou.mq.rabbit.dispatcher.facade.model.DispatchMessageResp;
+import com.ymatou.mq.rabbit.dispatcher.facade.model.ErrorCode;
 import com.ymatou.mq.rabbit.dispatcher.service.MessageDispatchService;
 import org.apache.commons.lang.StringUtils;
 import org.bson.types.ObjectId;
@@ -42,14 +43,19 @@ public class MessageDispatchFacadeImpl implements MessageDispatchFacade {
         Message msg = this.buildMessage(req);
 
         //接收发布消息
-        messageDispatchService.dispatch(msg);
+        boolean result = messageDispatchService.dispatch(msg);
 
-        //FIXME:总是返回true??? 上一步可能返回false
-        //返回
         DispatchMessageResp resp = new DispatchMessageResp();
-        resp.setUuid(msg.getId());
-        resp.setSuccess(true);
-        return resp;
+        if(result){
+            resp.setUuid(msg.getId());
+            resp.setSuccess(true);
+            return resp;
+        }else{
+            resp.setErrorCode(ErrorCode.FAIL);
+            resp.setErrorMessage("dispatch message error.");
+            resp.setSuccess(false);
+            return resp;
+        }
     }
 
     /**
