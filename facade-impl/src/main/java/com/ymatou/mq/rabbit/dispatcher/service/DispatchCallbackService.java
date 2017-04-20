@@ -121,6 +121,7 @@ public class DispatchCallbackService implements HttpInvokeResultService {
             if(isNeedInsertCompensate){//若需要插补单
                 //插补单
                 MessageCompensate messageCompensate = this.buildCompensate(message,callbackConfig);
+                //FIXME:应该是入文件队列
                 messageService.insertCompensate(messageCompensate);
 
                 //更新分发明细状态
