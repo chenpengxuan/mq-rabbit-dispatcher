@@ -7,6 +7,10 @@ package com.ymatou.mq.rabbit.dispatcher.support;
 public class ActionConstants {
 
     /**
+     * 实体类型-消息
+     */
+    public static final String ENTITY_MESSAGE = "message";
+    /**
      * 实体类型-分发明细
      */
     public static final String ENTITY_DISPATCH = "dispatch";
@@ -21,9 +25,9 @@ public class ActionConstants {
      */
     public static final int ACTION_TYPE_UNDEFINED = 0;
     /**
-     * 操作类型-添加
+     * 操作类型-插入
      */
-    public static final int ACTION_TYPE_ADD = 1;
+    public static final int ACTION_TYPE_INSERT = 1;
     /**
      * 操作类型-更新
      */
