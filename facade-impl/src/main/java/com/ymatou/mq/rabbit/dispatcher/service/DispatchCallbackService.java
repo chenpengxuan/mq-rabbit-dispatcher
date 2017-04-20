@@ -65,6 +65,8 @@ public class DispatchCallbackService implements HttpInvokeResultService {
             return;
         }
 
+        //FIXME 只有启用了 或 当前 是stg + onlyStgEnbale
+
         doInvokeOne(callbackMessage,callbackConfig,null);
     }
 
@@ -77,6 +79,7 @@ public class DispatchCallbackService implements HttpInvokeResultService {
     void doInvokeOne(CallbackMessage callbackMessage,CallbackConfig callbackConfig,Long timeout){
         long startTime = System.currentTimeMillis();
 
+        //
         try {
             //async http send
             new AsyncHttpInvokeService(callbackMessage,callbackConfig,this).send();
@@ -156,6 +159,7 @@ public class DispatchCallbackService implements HttpInvokeResultService {
     }
 
     /**
+     * FIXME :使用 callbackConfig.isCallbackEnable()
      * 判断是否需要插补单记录，开启配置&开启消息存储&开启补单
      * @param callbackConfig
      * @return
