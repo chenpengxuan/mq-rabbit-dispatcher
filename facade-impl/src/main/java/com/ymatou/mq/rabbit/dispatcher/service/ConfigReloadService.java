@@ -43,6 +43,7 @@ public class ConfigReloadService implements ConfigReloadListener {
     public void init() {
         messageConfigService.addConfigCacheListener(this);
         //启动时consumer处理
+        //FIXME: 与MessageConsumerManager的startAll()功能重复，多创建了channel?
         handleConsumer();
     }
 
