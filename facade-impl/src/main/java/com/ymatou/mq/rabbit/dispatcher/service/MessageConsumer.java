@@ -1,5 +1,6 @@
 package com.ymatou.mq.rabbit.dispatcher.service;
 
+import com.alibaba.fastjson.JSON;
 import com.rabbitmq.client.*;
 import com.ymatou.mq.infrastructure.model.CallbackMessage;
 import com.ymatou.mq.infrastructure.model.Message;
@@ -98,8 +99,9 @@ public class MessageConsumer implements Consumer{
         logger.debug("consumerTag:{},envelope:{},properties:{}.",consumerTag,envelope,properties);
 
         try {
-            //FIXME:编码格式要跟receiver一致，都明确设为"UTF-8"??
+            //TODO 设置编码
             Message message = (Message) SerializationUtils.deserialize(body);
+            //Message message = (Message) JSON.parse(body,null);
             CallbackMessage callbackMessage = toCallbackMessage(message);
             dispatchCallbackService.invoke(callbackMessage);
         } catch (Exception e) {
