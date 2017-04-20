@@ -105,12 +105,14 @@ public class MessageFileQueueService implements Function<Pair<String, String>, B
         //分发回调
         try {
             QueueConfig queueConfig = messageConfigService.getQueueConfig(message.getAppId(),message.getQueueCode());
-            for(CallbackConfig callbackConfig:queueConfig.getCallbackCfgList()){
-                //未开启则跳过
-                if(!queueConfig.getEnable() || !callbackConfig.getEnable()){
-                    continue;
+            if ( queueConfig != null ) {
+                for (CallbackConfig callbackConfig : queueConfig.getCallbackCfgList()) {
+                    //未开启则跳过
+                    if (!queueConfig.getEnable() || !callbackConfig.getEnable()) {
+                        continue;
+                    }
+                    dispatchCallbackService.invoke(convertMessage(message, callbackConfig.getCallbackKey()));
                 }
-                dispatchCallbackService.invoke(convertMessage(message,callbackConfig.getCallbackKey()));
             }
             dispatchResult = true;
         } catch (Exception e) {
