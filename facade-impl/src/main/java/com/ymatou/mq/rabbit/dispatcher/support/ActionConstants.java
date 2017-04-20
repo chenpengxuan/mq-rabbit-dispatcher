@@ -5,36 +5,15 @@ package com.ymatou.mq.rabbit.dispatcher.support;
  * @author zhangyifan 2016/9/1 12:00
  */
 public class ActionConstants {
+    /**
+     * 操作类型-处理回调成功
+     */
+    public static final int ACTION_TYPE_INVOKE_SUCCESS = 100;
 
     /**
-     * 实体类型-消息
+     * 操作类型-处理回调失败
      */
-    public static final String ENTITY_MESSAGE = "message";
-    /**
-     * 实体类型-分发明细
-     */
-    public static final String ENTITY_DISPATCH = "dispatch";
-    /**
-     * 实体类型-补单
-     */
-    public static final String ENTITY_COMPENSATE = "compensate";
+    public static final int ACTION_TYPE_INVOKE_FAIL = 101;
 
-
-    /**
-     * 操作类型-未指定
-     */
-    public static final int ACTION_TYPE_UNDEFINED = 0;
-    /**
-     * 操作类型-插入
-     */
-    public static final int ACTION_TYPE_INSERT = 1;
-    /**
-     * 操作类型-更新
-     */
-    public static final int ACTION_TYPE_UPDATE = 2;
-    /**
-     * 操作类型-删除
-     */
-    public static final int ACTION_TYPE_DELETE = 3;
 }
 

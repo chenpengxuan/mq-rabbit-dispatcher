@@ -14,6 +14,7 @@ import com.ymatou.mq.infrastructure.support.enums.DispatchStatusEnum;
 import com.ymatou.mq.rabbit.dispatcher.support.Action;
 import com.ymatou.mq.rabbit.dispatcher.support.ActionConstants;
 import com.ymatou.mq.rabbit.dispatcher.support.ActionListener;
+import com.ymatou.mq.rabbit.dispatcher.support.CallbackMessageAndConfig;
 import com.ymatou.performancemonitorclient.PerformanceStatisticContainer;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
@@ -50,17 +51,13 @@ public class DispatchCallbackService implements HttpInvokeResultService {
 
     @PostConstruct
     public void init(){
-        //插消息事件监听
-        String key = String.format("%s_%d", ActionConstants.ENTITY_MESSAGE, ActionConstants.ACTION_TYPE_INSERT);
-        actionFileQueueService.addActionListener(key,new InsertMessageActionListener());
+        //处理回调成功事件监听
+        String key = String.format("%d", ActionConstants.ACTION_TYPE_INVOKE_SUCCESS);
+        actionFileQueueService.addActionListener(key,new InvokeSuccessActionListener());
 
-        //更新分发明细事件监听
-        key = String.format("%s_%d", ActionConstants.ENTITY_DISPATCH, ActionConstants.ACTION_TYPE_UPDATE);
-        actionFileQueueService.addActionListener(key,new UpdateDetailActionListener());
-
-        //插入补单事件监听
-        key = String.format("%s_%d", ActionConstants.ENTITY_COMPENSATE, ActionConstants.ACTION_TYPE_INSERT);
-        actionFileQueueService.addActionListener(key,new InsertCompensateActionListener());
+        //处理回调失败事件监听
+        key = String.format("%d", ActionConstants.ACTION_TYPE_INVOKE_FAIL);
+        actionFileQueueService.addActionListener(key,new InvokeFailActionListener());
     }
 
     /**
@@ -107,19 +104,8 @@ public class DispatchCallbackService implements HttpInvokeResultService {
      */
     @Override
     public void onInvokeSuccess(CallbackMessage callbackMessage, CallbackConfig callbackConfig){
-        try {
-            //插消息
-            Message message = buildMessage(callbackMessage,callbackConfig);
-            Action action = buildAction(ActionConstants.ENTITY_MESSAGE, ActionConstants.ACTION_TYPE_INSERT,message);
-            actionFileQueueService.saveActionToFileDb(action);
-
-            //更新分发明细状态
-            CallbackResult callbackResult = this.buildCallbackResult(callbackMessage,callbackConfig, callbackMessage.getResponse());
-            action = buildAction(ActionConstants.ENTITY_DISPATCH, ActionConstants.ACTION_TYPE_UPDATE,callbackResult);
-            actionFileQueueService.saveActionToFileDb(action);
-        } catch (Exception e) {
-            logger.error("onInvokeSuccess proccess error.",e);
-        }
+        Action action = buildAction(ActionConstants.ACTION_TYPE_INVOKE_SUCCESS,CallbackMessageAndConfig.fromCallbackMessageAndConfig(callbackMessage,callbackConfig));
+        actionFileQueueService.saveActionToFileDb(action);
     }
 
     /**
@@ -128,34 +114,8 @@ public class DispatchCallbackService implements HttpInvokeResultService {
      */
     @Override
     public void onInvokeFail(CallbackMessage callbackMessage, CallbackConfig callbackConfig){
-        try {
-            //插消息
-            Message message = buildMessage(callbackMessage,callbackConfig);
-            Action action = buildAction(ActionConstants.ENTITY_MESSAGE, ActionConstants.ACTION_TYPE_INSERT,message);
-            actionFileQueueService.saveActionToFileDb(action);
-
-            if(callbackConfig.isCompensateEnable()){//若需要插补单
-                //插补单
-                MessageCompensate messageCompensate = this.buildCompensate(callbackMessage,callbackConfig);
-                action = buildAction(ActionConstants.ENTITY_COMPENSATE, ActionConstants.ACTION_TYPE_INSERT,messageCompensate);
-                actionFileQueueService.saveActionToFileDb(action);
-
-                //更新分发明细状态
-                CallbackResult callbackResult = this.buildCallbackResult(callbackMessage,callbackConfig,true);
-                action = buildAction(ActionConstants.ENTITY_DISPATCH, ActionConstants.ACTION_TYPE_UPDATE,callbackResult);
-                actionFileQueueService.saveActionToFileDb(action);
-            }else{//若不需要插补单
-                //更新分发明细状态
-                CallbackResult callbackResult = this.buildCallbackResult(callbackMessage,callbackConfig,false);
-                action = buildAction(ActionConstants.ENTITY_DISPATCH, ActionConstants.ACTION_TYPE_UPDATE,callbackResult);
-                actionFileQueueService.saveActionToFileDb(action);
-            }
-        } catch (Exception e) {
-            logger.error("onInvokeFail proccess error.",e);
-        } finally {
-            //FIXME:需要吗？？
-            errorReportClient.sendErrorReport(callbackMessage,callbackConfig);
-        }
+        Action action = buildAction(ActionConstants.ACTION_TYPE_INVOKE_FAIL,CallbackMessageAndConfig.fromCallbackMessageAndConfig(callbackMessage,callbackConfig));
+        actionFileQueueService.saveActionToFileDb(action);
     }
 
     /**
@@ -179,15 +139,14 @@ public class DispatchCallbackService implements HttpInvokeResultService {
 
     /**
      * 构造action
-     * @param obj
+     * @param actionType
      * @return
      */
-    Action buildAction(String entity, int actionType, Object obj){
+    Action buildAction(int actionType, Object param){
         Action action = new Action();
-        action.setEntity(entity);
-        action.setActionType(actionType);
         action.setId(ObjectId.get().toString());
-        action.setObj(obj);
+        action.setActionType(actionType);
+        action.setParam(param);
         return action;
     }
 
@@ -296,42 +255,68 @@ public class DispatchCallbackService implements HttpInvokeResultService {
     }
 
     /**
-     * FIXME:作为一个整体塞到其他两个Action中去
-     * 插入消息操作监听
+     * 回调成功处理事件
      */
-    class InsertMessageActionListener implements ActionListener{
+    class InvokeSuccessActionListener implements ActionListener{
 
         @Override
         public void execute(Object obj) {
-            logger.debug("execute insertMessage action...");
-            Message message = JSON.parseObject(String.valueOf(obj),Message.class);
-            messageService.saveMessage(message);
+            logger.debug("execute InvokeSuccessActionListener action...");
+            try {
+                CallbackMessageAndConfig callbackMessageAndConfig = JSON.parseObject(String.valueOf(obj),CallbackMessageAndConfig.class);
+                CallbackMessage callbackMessage = callbackMessageAndConfig;
+                CallbackConfig callbackConfig = callbackMessageAndConfig.getCallbackConfig();
+
+                //插消息
+                Message message = buildMessage(callbackMessage,callbackConfig);
+                messageService.saveMessage(message);
+
+                //更新分发明细状态
+                CallbackResult callbackResult = buildCallbackResult(callbackMessage,callbackConfig, callbackMessage.getResponse());
+                messageService.updateDispatchDetail(callbackResult);
+            } catch (Exception e) {
+                logger.error("onInvokeSuccess proccess error.",e);
+            }
         }
     }
 
     /**
-     * 更新明细操作监听
+     * 回调失败事件处理
      */
-    class UpdateDetailActionListener implements ActionListener{
+    class InvokeFailActionListener implements ActionListener{
 
         @Override
         public void execute(Object obj) {
-            logger.debug("execute updateDetail action...");
-            CallbackResult callbackResult = JSON.parseObject(String.valueOf(obj),CallbackResult.class);
-            messageService.updateDispatchDetail(callbackResult);
-        }
-    }
+            logger.debug("execute InvokeFailActionListener action...");
 
-    /**
-     * 插入补单
-     */
-    class InsertCompensateActionListener implements ActionListener{
+            CallbackMessageAndConfig callbackMessageAndConfig = JSON.parseObject(String.valueOf(obj),CallbackMessageAndConfig.class);
+            CallbackMessage callbackMessage = callbackMessageAndConfig;
+            CallbackConfig callbackConfig = callbackMessageAndConfig.getCallbackConfig();
 
-        @Override
-        public void execute(Object obj) {
-            logger.debug("execute insertCompensate action...");
-            MessageCompensate messageCompensate = JSON.parseObject(String.valueOf(obj),MessageCompensate.class);
-            messageService.insertCompensate(messageCompensate);
+            try {
+                //插消息
+                Message message = buildMessage(callbackMessage,callbackConfig);
+                messageService.saveMessage(message);
+
+                if(callbackConfig.isCompensateEnable()){//若需要插补单
+                    //插补单
+                    MessageCompensate messageCompensate = buildCompensate(callbackMessage,callbackConfig);
+                    messageService.insertCompensate(messageCompensate);
+
+                    //更新分发明细状态
+                    CallbackResult callbackResult = buildCallbackResult(callbackMessage,callbackConfig,true);
+                    messageService.updateDispatchDetail(callbackResult);
+                }else{//若不需要插补单
+                    //更新分发明细状态
+                    CallbackResult callbackResult = buildCallbackResult(callbackMessage,callbackConfig,false);
+                    messageService.updateDispatchDetail(callbackResult);
+                }
+            } catch (Exception e) {
+                logger.error("onInvokeFail proccess error.",e);
+            } finally {
+                //FIXME:需要吗？？
+                errorReportClient.sendErrorReport(callbackMessage,callbackConfig);
+            }
         }
     }
 

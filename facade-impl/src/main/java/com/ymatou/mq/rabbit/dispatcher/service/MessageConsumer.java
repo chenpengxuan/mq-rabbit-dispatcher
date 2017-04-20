@@ -99,9 +99,7 @@ public class MessageConsumer implements Consumer{
         logger.debug("consumerTag:{},envelope:{},properties:{}.",consumerTag,envelope,properties);
 
         try {
-            //TODO 设置编码
-            Message message = (Message) SerializationUtils.deserialize(body);
-            //Message message = (Message) JSON.parse(body,null);
+            Message message = (Message) parseMessageByJava(body);
             CallbackMessage callbackMessage = toCallbackMessage(message);
             dispatchCallbackService.invoke(callbackMessage);
         } catch (Exception e) {
@@ -110,6 +108,27 @@ public class MessageConsumer implements Consumer{
             channel.basicAck(envelope.getDeliveryTag(),false);
         }
     }
+
+    /**
+     * 通过java解析message
+     * @param body
+     * @return
+     */
+    Message parseMessageByJava(byte[] body){
+        //TODO 设置编码
+        return  (Message) SerializationUtils.deserialize(body);
+    }
+
+    /**
+     * 通过fast json解析message
+     * @param body
+     * @return
+     */
+    Message parseMessageByFastJson(byte[] body){
+        return  null;
+    }
+
+
 
     /**
      * 转化为callback message

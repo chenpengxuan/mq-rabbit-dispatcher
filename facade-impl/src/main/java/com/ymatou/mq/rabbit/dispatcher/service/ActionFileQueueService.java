@@ -85,15 +85,16 @@ public class ActionFileQueueService implements Function<Pair<String, String>, Bo
             //消费数据
             Action action = Action.fromJson(pair.getValue());
             logger.info("consume action:{} from fileDb.",action);
-            ActionListener actionListener = getActionListener(String.format("%s_%s",action.getEntity(),action.getActionType()));
+            ActionListener actionListener = getActionListener(String.format("%s",action.getActionType()));
             if(actionListener == null){
-                logger.error("actionListener entity:{},actionType:{} not exist.",action.getEntity(),action.getActionType());
+                logger.error("actionListener actionType:{} not exist.",action.getActionType());
                 return false;
             }
-            actionListener.execute(action.getObj());
+            actionListener.execute(action.getParam());
         } catch (Exception e) {
             logger.error("actionListener execute error.",e);
-            return false;
+            //TODO
+            return true;
         }
         return true;
     }

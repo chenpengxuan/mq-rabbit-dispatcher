@@ -15,19 +15,14 @@ public class Action extends PrintFriendliness {
     private String id;
 
     /**
-     * 实体名称
-     */
-    private String entity;
-
-    /**
-     * 操作类型 0:不指定 1:添加 2:更新 3:删除
+     * 操作类型
      */
     private int actionType;
 
     /**
      * 操作对象
      */
-    private Object obj;
+    private Object param;
 
     public String getId() {
         return id;
@@ -45,20 +40,12 @@ public class Action extends PrintFriendliness {
         this.actionType = actionType;
     }
 
-    public Object getObj() {
-        return obj;
+    public Object getParam() {
+        return param;
     }
 
-    public void setObj(Object obj) {
-        this.obj = obj;
-    }
-
-    public String getEntity() {
-        return entity;
-    }
-
-    public void setEntity(String entity) {
-        this.entity = entity;
+    public void setParam(Object param) {
+        this.param = param;
     }
 
     public static String toJsonString(Action action) {
