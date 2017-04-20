@@ -90,6 +90,7 @@ public class MessageConsumer implements Consumer{
         logger.info("close message consumer callbackKey:{},cluster:{}",callbackKey,cluster);
         if(channel != null && channel.isOpen()){
             try {
+                //FIXME:不仅仅只关闭channel
                 channel.close();
             } catch (Exception e) {
                 logger.error("close channel error.",e);
