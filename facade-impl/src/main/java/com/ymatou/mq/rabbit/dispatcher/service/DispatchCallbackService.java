@@ -36,11 +36,6 @@ public class DispatchCallbackService implements HttpInvokeResultService {
 
     public static final String MONITOR_APP_ID = "mqmonitor.iapi.ymatou.com";
 
-    /**
-     * 每个回调key url的业务性能监控
-     */
-    public static final String MONITOR_CALLBACK_KEY_URL_APP_ID = "mqmonitor.callbackkeyurl.iapi.ymatou.com";
-
     @Autowired
     private MessageConfigService messageConfigService;
 
@@ -100,10 +95,8 @@ public class DispatchCallbackService implements HttpInvokeResultService {
             logger.error("doInvokeOne error.",e);
         }
 
-        // 上报分发回调性能数据
-        //FIXME: 上报的应该是callback url真正的耗时。。。
+        // 上报分发回调调用记录
         long consumedTime = System.currentTimeMillis() - startTime;
-        //FIXME: seviceid  应该是callbackurl
         PerformanceStatisticContainer.add(consumedTime, String.format("%s.dispatch", callbackConfig.getCallbackKey()),
                 MONITOR_APP_ID);
     }
