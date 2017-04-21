@@ -9,6 +9,9 @@ package com.ymatou.mq.rabbit.dispatcher.config;
 
 import com.ymatou.performancemonitorclient.PerformanceMonitorAdvice;
 import org.aspectj.lang.annotation.Aspect;
+import org.springframework.aop.Advisor;
+import org.springframework.aop.aspectj.AspectJExpressionPointcut;
+import org.springframework.aop.support.DefaultPointcutAdvisor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -35,21 +38,21 @@ public class PerformanceConfig {
         return performanceMonitorAdvice;
     }
 
-    /*
+
     @Bean(name = "performancePointcut")
     public AspectJExpressionPointcut aspectJExpressionPointcut() {
         AspectJExpressionPointcut aspectJExpressionPointcut = new AspectJExpressionPointcut();
 
         aspectJExpressionPointcut.setExpression(
                 "execution(* com.ymatou.mq.infrastructure.repository.*Repository.*(..))"
-                        + "|| execution(* com.ymatou.mq.rabbit.receiver.service..*.*(..))"
+                        + "|| execution(* com.ymatou.mq.rabbit.dispatcher.service..*.*(..))"
         );
 
         return aspectJExpressionPointcut;
     }
 
 
-    *//**
+    /**
      * 对应xml
      * <aop:config>
      * <aop:advisor advice-ref="performanceMonitorAdvice"
@@ -57,10 +60,10 @@ public class PerformanceConfig {
      * </aop:config>
      *
      * @return
-     *//*
+     */
     @Bean
     public Advisor performanceMonitorAdvisor() {
         return new DefaultPointcutAdvisor(aspectJExpressionPointcut(), performanceMonitorAdvice());
     }
-*/
+
 }
