@@ -183,6 +183,7 @@ public class FileDbConf implements IDisconfUpdate{
         messageFileQueueService.getFileDb().reset(msgDbNewConfig);
 
         //actionDb
+        //FIXME:never used?!!
         FileDbConfig actionDbNewConfig = FileDbConfig.newInstance()
                 .setConsumerThreadNums(getActionDbConsumerThreadNums())
                 .setConsumeDuration(getActionDbConsumeDuration())
