@@ -93,8 +93,7 @@ public class ActionFileQueueService implements Function<Pair<String, String>, Bo
             actionListener.execute(action.getParam());
         } catch (Exception e) {
             logger.error("actionListener execute error.",e);
-            //TODO
-            return true;
+            return false;
         }
         return true;
     }

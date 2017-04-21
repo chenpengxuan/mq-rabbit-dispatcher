@@ -1,12 +1,12 @@
 package com.ymatou.mq.rabbit.dispatcher.service;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.ymatou.mq.infrastructure.model.*;
 import com.ymatou.mq.infrastructure.service.AsyncHttpInvokeService;
 import com.ymatou.mq.infrastructure.service.HttpInvokeResultService;
 import com.ymatou.mq.infrastructure.service.MessageConfigService;
 import com.ymatou.mq.infrastructure.service.MessageService;
-import com.ymatou.mq.infrastructure.support.ErrorReportClient;
 import com.ymatou.mq.infrastructure.support.enums.CallbackFromEnum;
 import com.ymatou.mq.infrastructure.support.enums.CompensateFromEnum;
 import com.ymatou.mq.infrastructure.support.enums.CompensateStatusEnum;
@@ -14,7 +14,6 @@ import com.ymatou.mq.infrastructure.support.enums.DispatchStatusEnum;
 import com.ymatou.mq.rabbit.dispatcher.support.Action;
 import com.ymatou.mq.rabbit.dispatcher.support.ActionConstants;
 import com.ymatou.mq.rabbit.dispatcher.support.ActionListener;
-import com.ymatou.mq.rabbit.dispatcher.support.CallbackMessageAndConfig;
 import com.ymatou.performancemonitorclient.PerformanceStatisticContainer;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
@@ -45,9 +44,6 @@ public class DispatchCallbackService implements HttpInvokeResultService {
 
     @Autowired
     private ActionFileQueueService actionFileQueueService;
-
-    @Autowired
-    private ErrorReportClient errorReportClient;
 
     @PostConstruct
     public void init(){
@@ -104,7 +100,7 @@ public class DispatchCallbackService implements HttpInvokeResultService {
      */
     @Override
     public void onInvokeSuccess(CallbackMessage callbackMessage, CallbackConfig callbackConfig){
-        Action action = buildAction(ActionConstants.ACTION_TYPE_INVOKE_SUCCESS,CallbackMessageAndConfig.fromCallbackMessageAndConfig(callbackMessage,callbackConfig));
+        Action action = buildAction(ActionConstants.ACTION_TYPE_INVOKE_SUCCESS,callbackMessage);
         actionFileQueueService.saveActionToFileDb(action);
     }
 
@@ -114,7 +110,7 @@ public class DispatchCallbackService implements HttpInvokeResultService {
      */
     @Override
     public void onInvokeFail(CallbackMessage callbackMessage, CallbackConfig callbackConfig){
-        Action action = buildAction(ActionConstants.ACTION_TYPE_INVOKE_FAIL,CallbackMessageAndConfig.fromCallbackMessageAndConfig(callbackMessage,callbackConfig));
+        Action action = buildAction(ActionConstants.ACTION_TYPE_INVOKE_FAIL,callbackMessage);
         actionFileQueueService.saveActionToFileDb(action);
     }
 
@@ -262,10 +258,11 @@ public class DispatchCallbackService implements HttpInvokeResultService {
         @Override
         public void execute(Object obj) {
             logger.debug("execute InvokeSuccessActionListener action...");
+
             try {
-                CallbackMessageAndConfig callbackMessageAndConfig = JSON.parseObject(String.valueOf(obj),CallbackMessageAndConfig.class);
-                CallbackMessage callbackMessage = callbackMessageAndConfig;
-                CallbackConfig callbackConfig = callbackMessageAndConfig.getCallbackConfig();
+                JSONObject jsonObject = (JSONObject)obj;
+                CallbackMessage callbackMessage = jsonObject.toJavaObject(CallbackMessage.class);
+                CallbackConfig callbackConfig = messageConfigService.getCallbackConfig(callbackMessage.getCallbackKey());
 
                 //插消息
                 Message message = buildMessage(callbackMessage,callbackConfig);
@@ -289,11 +286,11 @@ public class DispatchCallbackService implements HttpInvokeResultService {
         public void execute(Object obj) {
             logger.debug("execute InvokeFailActionListener action...");
 
-            CallbackMessageAndConfig callbackMessageAndConfig = JSON.parseObject(String.valueOf(obj),CallbackMessageAndConfig.class);
-            CallbackMessage callbackMessage = callbackMessageAndConfig;
-            CallbackConfig callbackConfig = callbackMessageAndConfig.getCallbackConfig();
-
             try {
+                JSONObject jsonObject = (JSONObject)obj;
+                CallbackMessage callbackMessage = jsonObject.toJavaObject(CallbackMessage.class);
+                CallbackConfig callbackConfig = messageConfigService.getCallbackConfig(callbackMessage.getCallbackKey());
+
                 //插消息
                 Message message = buildMessage(callbackMessage,callbackConfig);
                 messageService.saveMessage(message);
@@ -313,9 +310,6 @@ public class DispatchCallbackService implements HttpInvokeResultService {
                 }
             } catch (Exception e) {
                 logger.error("onInvokeFail proccess error.",e);
-            } finally {
-                //FIXME:需要吗？？
-                errorReportClient.sendErrorReport(callbackMessage,callbackConfig);
             }
         }
     }
