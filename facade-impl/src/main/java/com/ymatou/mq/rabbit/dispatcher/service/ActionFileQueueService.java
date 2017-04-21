@@ -60,17 +60,12 @@ public class ActionFileQueueService implements Function<Pair<String, String>, Bo
 
 
     /**
-     * FIXME:极端情况，写文件失败，直接insert/update mongo??
      * 保存指令到文件队列
      * @param action
      */
     public void saveActionToFileDb(Action action) {
-        try {
-            logger.debug("save action:{} to fileDb.",action);
-            fileDb.put(action.getId(), Action.toJsonString(action));
-        } catch (Exception e) {
-            logger.error("saveActionToFileDb error.",e);
-        }
+        logger.debug("save action:{} to fileDb.",action);
+        fileDb.put(action.getId(), Action.toJsonString(action));
     }
 
     /**
@@ -82,20 +77,28 @@ public class ActionFileQueueService implements Function<Pair<String, String>, Bo
     @Override
     public Boolean apply(Pair<String, String> pair) {
         try {
-            //消费数据
+            //获取指令
             Action action = Action.fromJson(pair.getValue());
             logger.info("consume action from fileDb,action:{}.",action);
-            ActionListener actionListener = getActionListener(String.format("%s",action.getActionType()));
-            if(actionListener == null){
-                logger.error("actionListener actionType:{} not exist.",action.getActionType());
-                return false;
-            }
-            actionListener.execute(action.getParam());
+            //执行指令操作
+            processAction(action);
         } catch (Exception e) {
             logger.error("actionListener execute error.",e);
             return false;
         }
         return true;
+    }
+
+    /**
+     * 执行指令对应操作
+     * @param action
+     */
+    void processAction(Action action) throws Exception{
+        ActionListener actionListener = getActionListener(String.format("%s",action.getActionType()));
+        if(actionListener == null){
+            throw new Exception(String.format("actionListener actionType:%s not exist.",action.getActionType()));
+        }
+        actionListener.execute(action.getParam());
     }
 
     /**
@@ -124,7 +127,13 @@ public class ActionFileQueueService implements Function<Pair<String, String>, Bo
     public void handleException(String key, String value, Optional<Throwable> throwable) {
         logger.warn("key:{},value:{} can not save to filedb ", key, value,
                 throwable.isPresent() ? throwable.get() : "");
-        //TODO 处理异常
+        //若写文件队列出错，则直接执行操作
+        try {
+            Action action = Action.fromJson(value);
+            processAction(action);
+        } catch (Exception e) {
+            logger.error("handleException,execute action error.",e);
+        }
     }
 
     @PreDestroy

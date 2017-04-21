@@ -91,10 +91,10 @@ public class MessageFileQueueService implements Function<Pair<String, String>, B
      */
     @Override
     public Boolean apply(Pair<String, String> pair) {
-        boolean saveMsgResult = false;
-        boolean dispatchResult = false;
         Message message = Message.fromJson(pair.getValue());
         logger.info("consume  message from fileDb,message:{}.",message);
+        boolean saveMsgResult = false;
+        boolean dispatchResult = false;
 
         //写消息
         try {
