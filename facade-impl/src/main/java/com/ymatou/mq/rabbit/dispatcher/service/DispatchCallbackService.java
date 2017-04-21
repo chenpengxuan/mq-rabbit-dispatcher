@@ -62,6 +62,7 @@ public class DispatchCallbackService implements HttpInvokeResultService {
      */
     public void invoke(CallbackMessage callbackMessage){
         CallbackConfig callbackConfig = messageConfigService.getCallbackConfig(callbackMessage.getCallbackKey());
+        logger.info("callback url:{},message:{}.",callbackConfig.getUrl(),callbackMessage);
         if(callbackConfig == null){
             logger.error("callback config appId:{},queueCode:{},callbackKey:{} not exist.",callbackMessage.getAppId(),callbackMessage.getQueueCode(),callbackMessage.getCallbackKey());
             return;

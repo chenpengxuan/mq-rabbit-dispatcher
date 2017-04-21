@@ -40,6 +40,7 @@ public class MessageDispatchService{
      * @param message
      */
     public boolean dispatch(Message message){
+        logger.info("direct dispatch message:{}.",message);
         //验证队列有效性
         this.validQueue(message.getAppId(),message.getQueueCode());
 

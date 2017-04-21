@@ -97,7 +97,7 @@ public class MessageConsumer implements Consumer{
 
     @Override
     public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
-        logger.debug("consumerTag:{},envelope:{},properties:{}.",consumerTag,envelope,properties);
+        logger.info("consume message from MQ,consumerTag:{},envelope:{},properties:{}.",consumerTag,envelope,properties);
 
         try {
             Message message = (Message) parseMessageByJava(body);
