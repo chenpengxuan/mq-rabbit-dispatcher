@@ -261,6 +261,7 @@ public class DispatchCallbackService implements HttpInvokeResultService {
      */
     class InvokeSuccessActionListener implements ActionListener{
 
+        //FIXME: 异常为什么要包住？
         @Override
         public void execute(Object obj) {
             logger.debug("execute InvokeSuccessActionListener action...");
@@ -284,6 +285,7 @@ public class DispatchCallbackService implements HttpInvokeResultService {
     }
 
     /**
+     * FIXME:异常为什么要包住？？
      * 回调失败事件处理
      */
     class InvokeFailActionListener implements ActionListener{
