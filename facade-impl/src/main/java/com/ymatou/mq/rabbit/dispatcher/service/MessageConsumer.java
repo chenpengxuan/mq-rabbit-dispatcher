@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Date;
 
 /**
  * rabbit consumer
@@ -145,6 +146,7 @@ public class MessageConsumer implements Consumer{
         callbackMessage.setBody(message.getBody());
         callbackMessage.setClientIp(message.getClientIp());
         callbackMessage.setRecvIp(message.getRecvIp());
+        callbackMessage.setCreateTime(message.getCreateTime() != null?message.getCreateTime():new Date());
         return callbackMessage;
     }
 

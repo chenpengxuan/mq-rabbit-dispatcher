@@ -189,6 +189,8 @@ public class DispatchCallbackService implements HttpInvokeResultService {
         callbackResult.setRespTime(new Date());
         //调用结果
         callbackResult.setStatus(DispatchStatusEnum.SUCCESS.getCode());
+        //接收时间
+        callbackResult.setCreateTime(callbackMessage.getCreateTime() != null?callbackMessage.getCreateTime():new Date());
         return callbackResult;
     }
 
@@ -224,6 +226,8 @@ public class DispatchCallbackService implements HttpInvokeResultService {
         }else{
             callbackResult.setStatus(DispatchStatusEnum.FAIL.getCode());
         }
+        //接收时间
+        callbackResult.setCreateTime(callbackMessage.getCreateTime() != null?callbackMessage.getCreateTime():new Date());
         return callbackResult;
     }
 

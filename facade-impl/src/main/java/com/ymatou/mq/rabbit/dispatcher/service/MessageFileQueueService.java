@@ -1,5 +1,6 @@
 package com.ymatou.mq.rabbit.dispatcher.service;
 
+import java.util.Date;
 import java.util.Optional;
 import java.util.function.Function;
 
@@ -111,7 +112,7 @@ public class MessageFileQueueService implements Function<Pair<String, String>, B
                     if (!queueConfig.getEnable() || !callbackConfig.getEnable()) {
                         continue;
                     }
-                    dispatchCallbackService.invoke(convertMessage(message, callbackConfig.getCallbackKey()));
+                    dispatchCallbackService.invoke(toCallbackMessage(message, callbackConfig.getCallbackKey()));
                 }
             }
             dispatchResult = true;
@@ -132,7 +133,7 @@ public class MessageFileQueueService implements Function<Pair<String, String>, B
      * @param message
      * @return
      */
-    CallbackMessage convertMessage(Message message,String callbackKey){
+    CallbackMessage toCallbackMessage(Message message, String callbackKey){
         CallbackMessage callbackMessage = new CallbackMessage();
         callbackMessage.setAppId(message.getAppId());
         callbackMessage.setQueueCode(message.getQueueCode());
@@ -140,6 +141,9 @@ public class MessageFileQueueService implements Function<Pair<String, String>, B
         callbackMessage.setId(message.getId());
         callbackMessage.setBizId(message.getBizId());
         callbackMessage.setBody(message.getBody());
+        callbackMessage.setClientIp(message.getClientIp());
+        callbackMessage.setRecvIp(message.getRecvIp());
+        callbackMessage.setCreateTime(message.getCreateTime() != null?message.getCreateTime():new Date());
         return callbackMessage;
     }
 
