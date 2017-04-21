@@ -125,7 +125,7 @@ public class ActionFileQueueService implements Function<Pair<String, String>, Bo
 
     @Override
     public void handleException(String key, String value, Optional<Throwable> throwable) {
-        logger.warn("key:{},value:{} can not save to filedb ", key, value,
+        logger.error("key:{},value:{} can not save to filedb ", key, value,
                 throwable.isPresent() ? throwable.get() : "");
         //若写文件队列出错，则直接执行操作
         try {
