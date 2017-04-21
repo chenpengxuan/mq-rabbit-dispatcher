@@ -6,15 +6,13 @@
 
 package com.ymatou.mq.rabbit.dispatcher.service;
 
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
+
 import com.ymatou.mq.infrastructure.model.AppConfig;
 import com.ymatou.mq.infrastructure.model.CallbackConfig;
 import com.ymatou.mq.infrastructure.model.QueueConfig;
 import com.ymatou.mq.infrastructure.service.MessageConfigService;
 import com.ymatou.mq.infrastructure.support.ConfigReloadListener;
-import com.ymatou.mq.rabbit.RabbitConnectionFactory;
-import com.ymatou.mq.rabbit.config.RabbitConfig;
+import com.ymatou.mq.rabbit.dispatcher.config.DispatchConfig;
 import com.ymatou.mq.rabbit.support.RabbitConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,6 +37,9 @@ public class ConfigReloadService implements ConfigReloadListener {
     @Autowired
     private MessageConsumerManager messageConsumerManager;
 
+    @Autowired
+    private DispatchConfig dispatchConfig;
+
     @PostConstruct
     public void init() {
         messageConfigService.addConfigCacheListener(this);
@@ -58,10 +59,14 @@ public class ConfigReloadService implements ConfigReloadListener {
         Map<String,MessageConsumer> messageConsumerMap = MessageConsumerManager.getMessageConsumerMap();
 
         for(AppConfig appConfig:MessageConfigService.appConfigMap.values()){
+            String dispatchGroup = appConfig.getDispatchGroup();
             for(QueueConfig queueConfig:appConfig.getMessageCfgList()){
                 for(CallbackConfig callbackConfig:queueConfig.getCallbackCfgList()){
                     //若配置开启，但目前没有运行着的messageConsumer则启动
                     if(queueConfig.getEnable() && callbackConfig.getEnable()){
+                        if (!dispatchConfig.isMatch(dispatchGroup)) {
+                            continue;
+                        }
                         for(String cluster:clusters){
                             String messageConsumerId = String.format("%s_%s",callbackConfig.getCallbackKey(),cluster);
                             if(messageConsumerMap.get(messageConsumerId) == null){

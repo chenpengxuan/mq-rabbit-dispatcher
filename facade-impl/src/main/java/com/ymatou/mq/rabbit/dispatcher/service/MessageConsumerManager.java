@@ -4,8 +4,6 @@ import com.ymatou.mq.infrastructure.model.AppConfig;
 import com.ymatou.mq.infrastructure.model.CallbackConfig;
 import com.ymatou.mq.infrastructure.model.QueueConfig;
 import com.ymatou.mq.infrastructure.service.MessageConfigService;
-import com.ymatou.mq.infrastructure.support.ConfigReloadListener;
-import com.ymatou.mq.infrastructure.support.SemaphorManager;
 import com.ymatou.mq.rabbit.config.RabbitConfig;
 import com.ymatou.mq.rabbit.dispatcher.config.DispatchConfig;
 
@@ -14,10 +12,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.util.CollectionUtils;
-
 import javax.annotation.PostConstruct;
-import java.io.IOException;
+
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -61,7 +57,7 @@ public class MessageConsumerManager {
         for(AppConfig appConfig:appConfigList){
             String dispatchGroup = appConfig.getDispatchGroup();
             //若所属分组为空或者不匹配，则跳过
-            if (dispatchGroup == null || !dispatchGroup.contains(groupId)) {
+            if (!dispatchConfig.isMatch(dispatchGroup)) {
                 continue;
             }
             for (QueueConfig queueConfig : appConfig.getMessageCfgList()) {

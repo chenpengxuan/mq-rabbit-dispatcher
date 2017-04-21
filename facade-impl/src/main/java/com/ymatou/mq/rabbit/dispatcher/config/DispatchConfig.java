@@ -5,6 +5,7 @@
  */
 package com.ymatou.mq.rabbit.dispatcher.config;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
 import com.baidu.disconf.client.common.annotations.DisconfFile;
@@ -29,5 +30,13 @@ public class DispatchConfig {
      */
     public void setGroupId(String groupId) {
         this.groupId = groupId;
+    }
+
+
+    public boolean isMatch(String dispatchGroup) {
+        if (StringUtils.isNotBlank(dispatchGroup) && dispatchGroup.contains(groupId)) {
+            return true;
+        }
+        return false;
     }
 }
