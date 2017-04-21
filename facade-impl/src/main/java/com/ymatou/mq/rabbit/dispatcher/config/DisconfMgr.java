@@ -21,25 +21,14 @@ import org.springframework.context.annotation.DependsOn;
 public class DisconfMgr {
 
     @Bean(name = "disconfMgrBean", destroyMethod = "destroy")
-    @DependsOn({"tomcatConfig"})
-    public DisconfMgrBean disconfMgrBean() {
+    public DisconfMgrBean disconfMgrBean(TomcatConfig tomcatConfig) {
 
         DisconfMgrBean disconfMgrBean = new DisconfMgrBean();
-        disconfMgrBean.setScanPackage("com.ymatou");
+        disconfMgrBean.setScanPackage("com.ymatou.mq");
 
+        disconfMgrBean.setDisconfInitCallback(() -> {
+            Constants.TOMCAT_CONFIG = tomcatConfig;
+        });
         return disconfMgrBean;
     }
-
-    @Bean(name = "disconfMgrBean2", destroyMethod = "destroy")
-    public DisconfMgrBeanSecond disconfMgrBean2(DisconfMgrBean disconfMgrBean, TomcatConfig tomcatConfig) {
-        DisconfMgrBeanSecond disconfMgrBeanSecond = new DisconfMgrBeanSecond();
-        try {
-            disconfMgrBeanSecond.init();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-        Constants.TOMCAT_CONFIG = tomcatConfig;
-        return disconfMgrBeanSecond;
-    }
-
 }
