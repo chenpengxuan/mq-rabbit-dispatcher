@@ -1,6 +1,9 @@
 package com.ymatou.mq.rabbit.dispatcher.service;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.parser.Feature;
+import com.alibaba.fastjson.serializer.SerializeConfig;
+import com.alibaba.fastjson.serializer.SerializerFeature;
 import com.rabbitmq.client.*;
 import com.ymatou.mq.infrastructure.model.CallbackMessage;
 import com.ymatou.mq.infrastructure.model.Message;
@@ -97,10 +100,10 @@ public class MessageConsumer implements Consumer{
 
     @Override
     public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
-        logger.info("consume message from MQ,consumerTag:{},envelope:{},properties:{}.",consumerTag,envelope,properties);
 
         try {
-            Message message = (Message) parseMessageByJava(body);
+            Message message = (Message) parseMessageByFastJson(body);
+            logger.info("consume message from MQ,message:{}.",message);
             CallbackMessage callbackMessage = toCallbackMessage(message);
             dispatchCallbackService.invoke(callbackMessage);
         } catch (Exception e) {
@@ -116,7 +119,6 @@ public class MessageConsumer implements Consumer{
      * @return
      */
     Message parseMessageByJava(byte[] body){
-        //TODO 设置编码
         return  (Message) SerializationUtils.deserialize(body);
     }
 
@@ -126,7 +128,8 @@ public class MessageConsumer implements Consumer{
      * @return
      */
     Message parseMessageByFastJson(byte[] body){
-        return  null;
+        Feature[] features = {};
+        return  JSON.parseObject(body,Message.class,features);
     }
 
 

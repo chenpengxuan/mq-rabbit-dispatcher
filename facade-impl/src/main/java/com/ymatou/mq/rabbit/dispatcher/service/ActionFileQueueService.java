@@ -122,7 +122,9 @@ public class ActionFileQueueService implements Function<Pair<String, String>, Bo
 
     @Override
     public void handleException(String key, String value, Optional<Throwable> throwable) {
-        logger.error("handleException occur key:{},value:{}",key,value,throwable);
+        logger.warn("key:{},value:{} can not save to filedb ", key, value,
+                throwable.isPresent() ? throwable.get() : "");
+        //TODO 处理异常
     }
 
     @PreDestroy
