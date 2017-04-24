@@ -102,7 +102,7 @@ public class MessageConsumer implements Consumer{
     public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
 
         try {
-            Message message = (Message) parseMessageByFastJson(body);
+            Message message = (Message) parseMessageByJava(body);
             logger.info("consume message from MQ,message:{}.",message);
             CallbackMessage callbackMessage = toCallbackMessage(message);
             dispatchCallbackService.invoke(callbackMessage);
