@@ -100,20 +100,6 @@ public class MessageConsumerManager {
     }
 
     /**
-     * FIXME:需要吗？？
-     * 停止所有queue监听
-     */
-    public void stopAll(){
-        //关停消费监听
-        for(MessageConsumer messageConsumer:messageConsumerMap.values()){
-            messageConsumer.stop();
-
-            //FIXME: hashMap的key是string!!
-            messageConsumerMap.remove(messageConsumer);
-        }
-    }
-
-    /**
      * stop对应的消费监听
      * @param callbackKey
      * @param cluster

@@ -201,4 +201,12 @@ public class MessageConsumer implements Consumer{
     public void setDispatchCallbackService(DispatchCallbackService dispatchCallbackService) {
         this.dispatchCallbackService = dispatchCallbackService;
     }
+
+    public String getCallbackKey() {
+        return callbackKey;
+    }
+
+    public void setCallbackKey(String callbackKey) {
+        this.callbackKey = callbackKey;
+    }
 }
