@@ -1,6 +1,7 @@
 package com.ymatou.mq.rabbit.dispatcher.support;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.serializer.SerializerFeature;
 import com.ymatou.mq.infrastructure.model.PrintFriendliness;
 
 /**
@@ -49,7 +50,7 @@ public class Action extends PrintFriendliness {
     }
 
     public static String toJsonString(Action action) {
-        return JSON.toJSONString(action);
+        return JSON.toJSONString(action, SerializerFeature.SkipTransientField);
     }
 
     public static Action fromJson(String action) {
