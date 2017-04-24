@@ -92,7 +92,7 @@ public class ActionFileQueueService implements Function<Pair<String, String>, Bo
             processAction(action);
         } catch (Exception e) {
             logger.error("actionListener execute error.",e);
-            return false;
+            return true;
         }
         return true;
     }
