@@ -2,7 +2,6 @@ description = "this is a web jar"
 
 apply plugin: 'application'
 
-mainClassName = "com.ymatou.userquery.starter.Application"
 
 jar {
     baseName = 'mq-rabbit-dispatcher-web'
@@ -43,7 +42,7 @@ task copyMeta(type: Copy) {
 }
 
 //打包发布 发布为：gradle release 默认位置为：build/distributions
-task release(type: Zip, dependsOn: [copyScript, copyJars, copyConfig, copyMeta]) {
+task release(type: Zip, dependsOn: [clean,copyScript, copyJars, copyConfig, copyMeta]) {
     archiveName = "mq-rabbit-receiver-web.zip"
     from "$buildDir/dist"
 }
