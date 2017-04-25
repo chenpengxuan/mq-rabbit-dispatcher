@@ -3,6 +3,7 @@
 source "/etc/profile"
 GCLOGPATH="logs/gc.log"
 DISCONF_ENV=$1
+APP_NAME="dispatcher.rmq.iapi.ymatou.com"
 MAIN_CLASS="com.ymatou.mq.rabbit.dispatcher.starter.Application"
 CLASS_PATH="lib/*:conf"
 JAVA_OPTS=" -server \
@@ -13,10 +14,10 @@ JAVA_OPTS=" -server \
             -XX:+UseConcMarkSweepGC -XX:+CMSParallelRemarkEnabled \
             -XX:+UseCMSInitiatingOccupancyOnly -XX:CMSInitiatingOccupancyFraction=75 \
             -XX:+ScavengeBeforeFullGC -XX:+CMSScavengeBeforeRemark \
-            -XX:+PrintGCDateStamps -verbose:gc -XX:+PrintGCDetails -Xloggc:/usr/local/log/userquery.trading.iapi.ymatou.com/gc.log \
+            -XX:+PrintGCDateStamps -verbose:gc -XX:+PrintGCDetails -Xloggc:/usr/local/log/${APP_NAME}/gc.log \
             -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=10 -XX:GCLogFileSize=100M \
             -Dsun.net.inetaddr.ttl=60 \
-            -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/usr/local/log/userquery.trading.iapi.ymatou.com/heapdump.hprof"
+            -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/usr/local/log/${APP_NAME}/heapdump.hprof"
 
 if [ ! -d "logs" ]; then
     mkdir logs
