@@ -39,17 +39,17 @@ public class PerformanceConfig {
     }
 
 
-    @Bean(name = "performancePointcut")
-    public AspectJExpressionPointcut aspectJExpressionPointcut() {
-        AspectJExpressionPointcut aspectJExpressionPointcut = new AspectJExpressionPointcut();
-
-        aspectJExpressionPointcut.setExpression(
-                "execution(* com.ymatou.mq.infrastructure.repository.*Repository.*(..))"
-                        + "|| execution(* com.ymatou.mq.rabbit.dispatcher.service..*.*(..))"
-        );
-
-        return aspectJExpressionPointcut;
-    }
+//    @Bean(name = "performancePointcut")
+//    public AspectJExpressionPointcut aspectJExpressionPointcut() {
+//        AspectJExpressionPointcut aspectJExpressionPointcut = new AspectJExpressionPointcut();
+//
+//        aspectJExpressionPointcut.setExpression(
+//                "execution(* com.ymatou.mq.infrastructure.repository.*Repository.*(..))"
+//                        + "|| execution(* com.ymatou.mq.rabbit.dispatcher.service..*.*(..))"
+//        );
+//
+//        return aspectJExpressionPointcut;
+//    }
 
 
     /**
@@ -61,9 +61,9 @@ public class PerformanceConfig {
      *
      * @return
      */
-    @Bean
-    public Advisor performanceMonitorAdvisor() {
-        return new DefaultPointcutAdvisor(aspectJExpressionPointcut(), performanceMonitorAdvice());
-    }
+//    @Bean
+//    public Advisor performanceMonitorAdvisor() {
+//        return new DefaultPointcutAdvisor(aspectJExpressionPointcut(), performanceMonitorAdvice());
+//    }
 
 }
