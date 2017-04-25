@@ -66,6 +66,10 @@ public class DispatchCallbackService implements HttpInvokeResultService {
             logger.error("callback config appId:{},queueCode:{},callbackKey:{} not exist.",callbackMessage.getAppId(),callbackMessage.getQueueCode(),callbackMessage.getCallbackKey());
             return;
         }
+        if(callbackConfig.getAbandonQueue()){
+            logger.warn("callback config appId:{},queueCode:{},callbackKey:{} abandon queue.",callbackMessage.getAppId(),callbackMessage.getQueueCode(),callbackMessage.getCallbackKey());
+            return;
+        }
         logger.info("callback url:{},message:{}.",callbackConfig.getUrl(),callbackMessage);
 
         if(callbackConfig.isDispatchEnable()){
