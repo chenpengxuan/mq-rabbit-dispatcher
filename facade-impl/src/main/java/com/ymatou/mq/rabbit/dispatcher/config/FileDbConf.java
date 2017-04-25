@@ -11,6 +11,7 @@ import com.baidu.disconf.client.common.annotations.DisconfUpdateService;
 import com.baidu.disconf.client.common.update.IDisconfUpdate;
 import com.ymatou.mq.infrastructure.filedb.FileDbConfig;
 import com.ymatou.mq.infrastructure.util.SpringContextHolder;
+import com.ymatou.mq.rabbit.dispatcher.service.ActionFileQueueService;
 import com.ymatou.mq.rabbit.dispatcher.service.MessageFileQueueService;
 import org.springframework.stereotype.Component;
 
@@ -187,9 +188,7 @@ public class FileDbConf implements IDisconfUpdate{
                 .setConsumerThreadNums(getActionDbConsumerThreadNums())
                 .setConsumeDuration(getActionDbConsumeDuration())
                 .setMaxConsumeSizeInDuration(getActionDbMaxConsumeSizeInDuration());
-        /*
-        MessageFileQueueService messageFileQueueService = SpringContextHolder.getBean(MessageFileQueueService.class);
-        messageFileQueueService.getFileDb().reset(msgDbNewConfig);
-        */
+        ActionFileQueueService actionFileQueueService = SpringContextHolder.getBean(ActionFileQueueService.class);
+        actionFileQueueService.getFileDb().reset(actionDbNewConfig);
     }
 }

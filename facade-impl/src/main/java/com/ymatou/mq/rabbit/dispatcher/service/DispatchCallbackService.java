@@ -62,11 +62,11 @@ public class DispatchCallbackService implements HttpInvokeResultService {
      */
     public void invoke(CallbackMessage callbackMessage){
         CallbackConfig callbackConfig = messageConfigService.getCallbackConfig(callbackMessage.getCallbackKey());
-        logger.info("callback url:{},message:{}.",callbackConfig.getUrl(),callbackMessage);
         if(callbackConfig == null){
             logger.error("callback config appId:{},queueCode:{},callbackKey:{} not exist.",callbackMessage.getAppId(),callbackMessage.getQueueCode(),callbackMessage.getCallbackKey());
             return;
         }
+        logger.info("callback url:{},message:{}.",callbackConfig.getUrl(),callbackMessage);
 
         if(callbackConfig.isDispatchEnable()){
             doInvokeOne(callbackMessage,callbackConfig,null);
@@ -169,7 +169,7 @@ public class DispatchCallbackService implements HttpInvokeResultService {
      * @param result
      * @return
      */
-    CallbackResult buildCallbackResult(CallbackMessage callbackMessage, CallbackConfig callbackConfig, String result) throws IOException {
+    CallbackResult buildCallbackResult(CallbackMessage callbackMessage, CallbackConfig callbackConfig, String result){
         CallbackResult callbackResult = new CallbackResult();
         callbackResult.setAppId(callbackMessage.getAppId());
         callbackResult.setQueueCode(callbackMessage.getQueueCode());
@@ -264,21 +264,17 @@ public class DispatchCallbackService implements HttpInvokeResultService {
         public void execute(Object obj) {
             logger.debug("execute InvokeSuccessActionListener action...");
 
-            try {
-                JSONObject jsonObject = (JSONObject)obj;
-                CallbackMessage callbackMessage = jsonObject.toJavaObject(CallbackMessage.class);
-                CallbackConfig callbackConfig = messageConfigService.getCallbackConfig(callbackMessage.getCallbackKey());
+            JSONObject jsonObject = (JSONObject)obj;
+            CallbackMessage callbackMessage = jsonObject.toJavaObject(CallbackMessage.class);
+            CallbackConfig callbackConfig = messageConfigService.getCallbackConfig(callbackMessage.getCallbackKey());
 
-                //插消息
-                Message message = buildMessage(callbackMessage,callbackConfig);
-                messageService.saveMessage(message);
+            //插消息
+            Message message = buildMessage(callbackMessage,callbackConfig);
+            messageService.saveMessage(message);
 
-                //更新分发明细状态
-                CallbackResult callbackResult = buildCallbackResult(callbackMessage,callbackConfig, callbackMessage.getResponse());
-                messageService.updateDispatchDetail(callbackResult);
-            } catch (Exception e) {
-                logger.error("onInvokeSuccess proccess error.",e);
-            }
+            //更新分发明细状态
+            CallbackResult callbackResult = buildCallbackResult(callbackMessage,callbackConfig, callbackMessage.getResponse());
+            messageService.updateDispatchDetail(callbackResult);
         }
     }
 
@@ -291,30 +287,26 @@ public class DispatchCallbackService implements HttpInvokeResultService {
         public void execute(Object obj) {
             logger.debug("execute InvokeFailActionListener action...");
 
-            try {
-                JSONObject jsonObject = (JSONObject)obj;
-                CallbackMessage callbackMessage = jsonObject.toJavaObject(CallbackMessage.class);
-                CallbackConfig callbackConfig = messageConfigService.getCallbackConfig(callbackMessage.getCallbackKey());
+            JSONObject jsonObject = (JSONObject)obj;
+            CallbackMessage callbackMessage = jsonObject.toJavaObject(CallbackMessage.class);
+            CallbackConfig callbackConfig = messageConfigService.getCallbackConfig(callbackMessage.getCallbackKey());
 
-                //插消息
-                Message message = buildMessage(callbackMessage,callbackConfig);
-                messageService.saveMessage(message);
+            //插消息
+            Message message = buildMessage(callbackMessage,callbackConfig);
+            messageService.saveMessage(message);
 
-                if(callbackConfig.isCompensateEnable()){//若需要插补单
-                    //插补单
-                    MessageCompensate messageCompensate = buildCompensate(callbackMessage,callbackConfig);
-                    messageService.insertCompensate(messageCompensate);
+            if(callbackConfig.isCompensateEnable()){//若需要插补单
+                //插补单
+                MessageCompensate messageCompensate = buildCompensate(callbackMessage,callbackConfig);
+                messageService.insertCompensate(messageCompensate);
 
-                    //更新分发明细状态
-                    CallbackResult callbackResult = buildCallbackResult(callbackMessage,callbackConfig,true);
-                    messageService.updateDispatchDetail(callbackResult);
-                }else{//若不需要插补单
-                    //更新分发明细状态
-                    CallbackResult callbackResult = buildCallbackResult(callbackMessage,callbackConfig,false);
-                    messageService.updateDispatchDetail(callbackResult);
-                }
-            } catch (Exception e) {
-                logger.error("onInvokeFail proccess error.",e);
+                //更新分发明细状态
+                CallbackResult callbackResult = buildCallbackResult(callbackMessage,callbackConfig,true);
+                messageService.updateDispatchDetail(callbackResult);
+            }else{//若不需要插补单
+                //更新分发明细状态
+                CallbackResult callbackResult = buildCallbackResult(callbackMessage,callbackConfig,false);
+                messageService.updateDispatchDetail(callbackResult);
             }
         }
     }

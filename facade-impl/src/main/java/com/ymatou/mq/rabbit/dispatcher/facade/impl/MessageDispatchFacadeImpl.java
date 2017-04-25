@@ -74,7 +74,7 @@ public class MessageDispatchFacadeImpl implements MessageDispatchFacade {
             msg.setId(req.getId());
         }
         msg.setBizId(req.getMsgUniqueId());
-        msg.setBody(JSON.toJSONStringWithDateFormat(req.getBody(), DATE_FORMAT));
+        msg.setBody(req.getBody());
         msg.setClientIp(req.getIp());
         msg.setRecvIp(NetUtil.getHostIp());
         msg.setCreateTime(new Date());

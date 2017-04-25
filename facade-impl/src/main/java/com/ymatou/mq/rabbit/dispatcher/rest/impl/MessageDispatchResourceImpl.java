@@ -25,7 +25,7 @@ import com.alibaba.dubbo.config.annotation.Service;
 @Component("messageDispatchResource")
 @Produces({"application/json; charset=UTF-8"})
 @Service(protocol = "rest")
-@Path("/{api:(?i:api)}")
+@Path("/{message:(?i:message)}")
 public class MessageDispatchResourceImpl implements MessageDispatchResource {
 
     public static final Logger logger = LoggerFactory.getLogger(MessageDispatchResourceImpl.class);

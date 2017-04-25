@@ -100,17 +100,6 @@ public class MessageConsumerManager {
     }
 
     /**
-     * 停止所有queue监听
-     */
-    public void stopAll(){
-        //关停消费监听
-        for(MessageConsumer messageConsumer:messageConsumerMap.values()){
-            messageConsumer.stop();
-            messageConsumerMap.remove(messageConsumer);
-        }
-    }
-
-    /**
      * stop对应的消费监听
      * @param callbackKey
      * @param cluster

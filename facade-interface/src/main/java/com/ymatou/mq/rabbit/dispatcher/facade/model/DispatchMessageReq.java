@@ -5,6 +5,9 @@
  */
 package com.ymatou.mq.rabbit.dispatcher.facade.model;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.serializer.SerializerFeature;
+import com.alibaba.fastjson.serializer.SimplePropertyPreFilter;
 import org.hibernate.validator.constraints.NotEmpty;
 
 import javax.validation.constraints.NotNull;
@@ -126,6 +129,15 @@ public class DispatchMessageReq extends BaseRequest {
      */
     public void setBody(String body) {
         this.body = body;
+    }
+
+    @Override
+    public String toString() {
+        SimplePropertyPreFilter filter = new SimplePropertyPreFilter();
+
+        //body无需输出到日志
+        filter.getExcludes().add("body");
+        return JSON.toJSONString(this, filter, SerializerFeature.WriteDateUseDateFormat, SerializerFeature.SkipTransientField);
     }
 
 }

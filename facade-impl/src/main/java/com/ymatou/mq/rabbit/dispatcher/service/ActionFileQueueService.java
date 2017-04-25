@@ -3,6 +3,7 @@ package com.ymatou.mq.rabbit.dispatcher.service;
 import com.ymatou.mq.infrastructure.filedb.FileDb;
 import com.ymatou.mq.infrastructure.filedb.FileDbConfig;
 import com.ymatou.mq.infrastructure.filedb.PutExceptionHandler;
+import com.ymatou.mq.infrastructure.model.CallbackMessage;
 import com.ymatou.mq.rabbit.dispatcher.config.FileDbConf;
 import com.ymatou.mq.rabbit.dispatcher.support.Action;
 import com.ymatou.mq.rabbit.dispatcher.support.ActionListener;
@@ -65,6 +66,13 @@ public class ActionFileQueueService implements Function<Pair<String, String>, Bo
      */
     public void saveActionToFileDb(Action action) {
         logger.debug("save action:{} to fileDb.",action);
+        //ex不序列化
+        if(action.getParam() != null && action.getParam() instanceof CallbackMessage){
+            CallbackMessage callbackMessage = (CallbackMessage)action.getParam();
+            if(callbackMessage.getEx() != null){
+                callbackMessage.setEx(null);
+            }
+        }
         fileDb.put(action.getId(), Action.toJsonString(action));
     }
 
@@ -84,7 +92,7 @@ public class ActionFileQueueService implements Function<Pair<String, String>, Bo
             processAction(action);
         } catch (Exception e) {
             logger.error("actionListener execute error.",e);
-            return false;
+            return true;
         }
         return true;
     }
@@ -125,7 +133,7 @@ public class ActionFileQueueService implements Function<Pair<String, String>, Bo
 
     @Override
     public void handleException(String key, String value, Optional<Throwable> throwable) {
-        logger.warn("key:{},value:{} can not save to filedb ", key, value,
+        logger.error("key:{},value:{} can not save to filedb ", key, value,
                 throwable.isPresent() ? throwable.get() : "");
         //若写文件队列出错，则直接执行操作
         try {
