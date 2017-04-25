@@ -2,7 +2,6 @@ description = "this is a web jar"
 
 apply plugin: 'application'
 
-mainClassName = "com.ymatou.userquery.starter.Application"
 
 jar {
     baseName = 'mq-rabbit-dispatcher-web'
