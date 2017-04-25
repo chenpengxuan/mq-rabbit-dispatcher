@@ -79,6 +79,8 @@ public class MessageConsumer implements Consumer{
         ChannelWrapper channelWrapper = RabbitChannelFactory.createChannelWrapper(cluster,rabbitConfig);
         this.channelWrapper = channelWrapper;
         channel = channelWrapper.getChannel();
+        channel.basicQos(1000);
+
         channel.addShutdownListener(new ShutdownListener() {
             @Override
             public void shutdownCompleted(ShutdownSignalException cause) {
