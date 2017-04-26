@@ -113,14 +113,14 @@ public class DispatchCallbackService implements HttpInvokeResultService {
         actionFileQueueService.saveActionToFileDb(action);
 
         //秒补 最多重试3次
-        if(callbackConfig.getSecondCompensateSpan() > 0 && callbackMessage.getSecondCompensateNums().get() < 3){
+        if(callbackConfig.getSecondCompensateSpan() > 0 && callbackMessage.getSecondCompensateNums() < 3){
             try {
                 TimeUnit.SECONDS.sleep(callbackConfig.getSecondCompensateSpan());
 
-                callbackMessage.getSecondCompensateNums().incrementAndGet();
+                callbackMessage.setSecondCompensateNums(callbackMessage.getSecondCompensateNums() + 1);
                 //async http send
                 new AsyncHttpInvokeService(callbackMessage,callbackConfig,this).send();
-                logger.info("SecondCompensate ,current SecondCompensateNums:{}",callbackMessage.getSecondCompensateNums().get());
+                logger.info("SecondCompensate ,current SecondCompensateNums:{}",callbackMessage.getSecondCompensateNums());
             } catch (Exception e) {
                 logger.error("SecondCompensate invoke error.",e);
             }
