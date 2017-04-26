@@ -116,9 +116,11 @@ public class DispatchCallbackService implements HttpInvokeResultService {
         if(callbackConfig.getSecondCompensateSpan() > 0 && callbackMessage.getSecondCompensateNums().get() < 3){
             try {
                 TimeUnit.SECONDS.sleep(callbackConfig.getSecondCompensateSpan());
+
                 callbackMessage.getSecondCompensateNums().incrementAndGet();
                 //async http send
                 new AsyncHttpInvokeService(callbackMessage,callbackConfig,this).send();
+                logger.info("SecondCompensate ,current SecondCompensateNums:{}",callbackMessage.getSecondCompensateNums().get());
             } catch (Exception e) {
                 logger.error("SecondCompensate invoke error.",e);
             }
