@@ -34,8 +34,6 @@ public class DispatchCallbackService implements HttpInvokeResultService {
 
     private static final Logger logger = LoggerFactory.getLogger(DispatchCallbackService.class);
 
-    public static final String MONITOR_APP_ID = "mqmonitor.iapi.ymatou.com";
-
     @Autowired
     private MessageConfigService messageConfigService;
 
@@ -84,7 +82,6 @@ public class DispatchCallbackService implements HttpInvokeResultService {
      * @param timeout
      */
     void doInvokeOne(CallbackMessage callbackMessage,CallbackConfig callbackConfig,Long timeout){
-        long startTime = System.currentTimeMillis();
 
         try {
             //async http send
@@ -93,10 +90,6 @@ public class DispatchCallbackService implements HttpInvokeResultService {
             logger.error("doInvokeOne error.",e);
         }
 
-        // 上报分发回调调用记录
-        long consumedTime = System.currentTimeMillis() - startTime;
-        PerformanceStatisticContainer.add(consumedTime, String.format("%s.dispatch", callbackConfig.getCallbackKey()),
-                MONITOR_APP_ID);
     }
 
     /**
