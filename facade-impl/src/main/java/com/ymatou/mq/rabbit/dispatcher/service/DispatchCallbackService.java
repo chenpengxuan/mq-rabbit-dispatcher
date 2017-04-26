@@ -24,6 +24,7 @@ import org.springframework.stereotype.Component;
 import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 消息分发callack service
@@ -110,6 +111,18 @@ public class DispatchCallbackService implements HttpInvokeResultService {
     public void onInvokeFail(CallbackMessage callbackMessage, CallbackConfig callbackConfig){
         Action action = buildAction(ActionConstants.ACTION_TYPE_INVOKE_FAIL,callbackMessage);
         actionFileQueueService.saveActionToFileDb(action);
+
+        //秒补 最多重试3次
+        if(callbackConfig.getSecondCompensateSpan() > 0 && callbackMessage.getSecondCompensateNums().get() < 3){
+            try {
+                TimeUnit.SECONDS.sleep(callbackConfig.getSecondCompensateSpan());
+                callbackMessage.getSecondCompensateNums().incrementAndGet();
+                //async http send
+                new AsyncHttpInvokeService(callbackMessage,callbackConfig,this).send();
+            } catch (Exception e) {
+                logger.error("SecondCompensate invoke error.",e);
+            }
+        }
     }
 
     /**
