@@ -3,7 +3,7 @@
 source "/etc/profile"
 GCLOGPATH="logs/gc.log"
 DISCONF_ENV=$1
-APP_NAME="dispatcher.rmq.iapi.ymatou.com"
+APP_NAME="dispatcher-rmq.iapi.ymatou.com"
 MAIN_CLASS="com.ymatou.mq.rabbit.dispatcher.starter.Application"
 CLASS_PATH="lib/*:conf"
 JAVA_OPTS=" -server \
