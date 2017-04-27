@@ -38,13 +38,7 @@ public class MessageFileQueueService implements Function<Pair<String, String>, B
     private FileDbConf fileDbConf;
 
     @Autowired
-    private DispatchCallbackService dispatchCallbackService;
-
-    @Autowired
-    private MessageService messageService;
-
-    @Autowired
-    private MessageConfigService messageConfigService;
+    private MessageDispatchService messageDispatchService;
 
     public FileDb getFileDb() {
         return fileDb;
@@ -93,59 +87,8 @@ public class MessageFileQueueService implements Function<Pair<String, String>, B
     public Boolean apply(Pair<String, String> pair) {
         Message message = Message.fromJson(pair.getValue());
         logger.info("consume  message from fileDb,message:{}.",message);
-        boolean saveMsgResult = false;
-        boolean dispatchResult = false;
-
-        //写消息
-        try {
-            messageService.saveMessage(message);
-            saveMsgResult = true;
-        } catch (Exception e) {
-            logger.error("save message error", e);
-        }
-
-        //分发回调
-        try {
-            QueueConfig queueConfig = messageConfigService.getQueueConfig(message.getAppId(),message.getQueueCode());
-            if ( queueConfig != null ) {
-                for (CallbackConfig callbackConfig : queueConfig.getCallbackCfgList()) {
-                    //未开启则跳过
-                    if (!queueConfig.getEnable() || !callbackConfig.getEnable()) {
-                        continue;
-                    }
-                    dispatchCallbackService.invoke(toCallbackMessage(message, callbackConfig.getCallbackKey()));
-                }
-            }
-            dispatchResult = true;
-        } catch (Exception e) {
-            logger.error("dispatch message error", e);
-        }
-
-        //若写消息或分发有一个成功，则返回true
-        if(dispatchResult || saveMsgResult){
-            return true;
-        }else{
-            return false;
-        }
-    }
-
-    /**
-     * 转化为CallbackMessage
-     * @param message
-     * @return
-     */
-    CallbackMessage toCallbackMessage(Message message, String callbackKey){
-        CallbackMessage callbackMessage = new CallbackMessage();
-        callbackMessage.setAppId(message.getAppId());
-        callbackMessage.setQueueCode(message.getQueueCode());
-        callbackMessage.setCallbackKey(callbackKey);
-        callbackMessage.setId(message.getId());
-        callbackMessage.setBizId(message.getBizId());
-        callbackMessage.setBody(message.getBody());
-        callbackMessage.setClientIp(message.getClientIp());
-        callbackMessage.setRecvIp(message.getRecvIp());
-        callbackMessage.setCreateTime(message.getCreateTime() != null?message.getCreateTime():new Date());
-        return callbackMessage;
+        //保存消息到mongo并直接分发消息
+        return messageDispatchService.saveAndDispatchMessage(message);
     }
 
     @Override

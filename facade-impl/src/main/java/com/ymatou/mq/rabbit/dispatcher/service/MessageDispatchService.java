@@ -1,6 +1,7 @@
 package com.ymatou.mq.rabbit.dispatcher.service;
 
 import com.ymatou.mq.infrastructure.model.CallbackConfig;
+import com.ymatou.mq.infrastructure.model.CallbackMessage;
 import com.ymatou.mq.infrastructure.model.Message;
 import com.ymatou.mq.infrastructure.model.QueueConfig;
 import com.ymatou.mq.infrastructure.service.MessageConfigService;
@@ -15,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
+import java.util.Date;
 import java.util.Map;
 
 /**
@@ -35,6 +37,9 @@ public class MessageDispatchService{
     @Autowired
     private MessageConfigService messageConfigService;
 
+    @Autowired
+    private DispatchCallbackService dispatchCallbackService;
+
     /**
      * 由接收站直接调用的分发处理接口
      * @param message
@@ -46,16 +51,72 @@ public class MessageDispatchService{
 
         //写fileDb
         boolean result = messageFileQueueService.saveMessageToFileDb(message);
-        //若写失败，则同步写mongo
+        //若写失败，则同步写mongo或直接分发
         if(!result){
-            try {
-                return messageService.saveMessage(message);
-            } catch (Exception e) {
-                logger.error("save message to mongo error.",e);
-                return false;
-            }
+            return saveAndDispatchMessage(message);
         }
         return result;
+    }
+
+    /**
+     * 保存消息到mongo并直接分发
+     * @param message
+     * @return
+     */
+    boolean saveAndDispatchMessage(Message message){
+        boolean saveMsgResult = false;
+        boolean dispatchResult = false;
+
+        //写消息
+        try {
+            messageService.saveMessage(message);
+            saveMsgResult = true;
+        } catch (Exception e) {
+            logger.error("save message error", e);
+        }
+
+        //分发回调
+        try {
+            QueueConfig queueConfig = messageConfigService.getQueueConfig(message.getAppId(),message.getQueueCode());
+            if ( queueConfig != null ) {
+                for (CallbackConfig callbackConfig : queueConfig.getCallbackCfgList()) {
+                    //未开启则跳过
+                    if (!queueConfig.getEnable() || !callbackConfig.getEnable()) {
+                        continue;
+                    }
+                    dispatchCallbackService.invoke(toCallbackMessage(message, callbackConfig.getCallbackKey()));
+                }
+            }
+            dispatchResult = true;
+        } catch (Exception e) {
+            logger.error("dispatch message error", e);
+        }
+
+        //若写消息或分发有一个成功，则返回true
+        if(dispatchResult || saveMsgResult){
+            return true;
+        }else{
+            return false;
+        }
+    }
+
+    /**
+     * 转化为CallbackMessage
+     * @param message
+     * @return
+     */
+    CallbackMessage toCallbackMessage(Message message, String callbackKey){
+        CallbackMessage callbackMessage = new CallbackMessage();
+        callbackMessage.setAppId(message.getAppId());
+        callbackMessage.setQueueCode(message.getQueueCode());
+        callbackMessage.setCallbackKey(callbackKey);
+        callbackMessage.setId(message.getId());
+        callbackMessage.setBizId(message.getBizId());
+        callbackMessage.setBody(message.getBody());
+        callbackMessage.setClientIp(message.getClientIp());
+        callbackMessage.setRecvIp(message.getRecvIp());
+        callbackMessage.setCreateTime(message.getCreateTime() != null?message.getCreateTime():new Date());
+        return callbackMessage;
     }
 
     /**
