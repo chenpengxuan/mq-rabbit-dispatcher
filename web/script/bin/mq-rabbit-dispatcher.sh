@@ -8,9 +8,9 @@ MAIN_CLASS="com.ymatou.mq.rabbit.dispatcher.starter.Application"
 CLASS_PATH="lib/*:conf"
 JAVA_OPTS=" -server \
             -Ddisconf.env=${DISCONF_ENV}
-            -Xms4096m -Xmx4096m \
+            -Xms1024m -Xmx1024m \
             -XX:MaxMetaspaceSize=512m \
-            -Xmn2000M \
+            -Xmn500M \
             -XX:+UseConcMarkSweepGC -XX:+CMSParallelRemarkEnabled \
             -XX:+UseCMSInitiatingOccupancyOnly -XX:CMSInitiatingOccupancyFraction=75 \
             -XX:+ScavengeBeforeFullGC -XX:+CMSScavengeBeforeRemark \
