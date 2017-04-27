@@ -115,8 +115,6 @@ public class DispatchCallbackService implements HttpInvokeResultService {
         //秒补 最多重试3次
         if(callbackConfig.getSecondCompensateSpan() > 0 && callbackMessage.getSecondCompensateNums() < 3){
             try {
-                TimeUnit.SECONDS.sleep(callbackConfig.getSecondCompensateSpan());
-
                 callbackMessage.setSecondCompensateNums(callbackMessage.getSecondCompensateNums() + 1);
                 //async http send
                 new AsyncHttpInvokeService(callbackMessage,callbackConfig,this).send();
