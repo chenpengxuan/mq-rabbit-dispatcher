@@ -18,13 +18,7 @@ JAVA_OPTS=" -server \
             -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=10 -XX:GCLogFileSize=100M \
             -Dsun.net.inetaddr.ttl=60 \
             -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/usr/local/log/${APP_NAME}/heapdump.hprof \
-            -Dcom.sun.management.jmxremote=true \
-            -Dcom.sun.management.jmxremote.port=7091 \
-            -Dcom.sun.management.jmxremote.authenticate=false \
-            -Dcom.sun.management.jmxremote.ssl=false \
-            -XX:+UnlockCommercialFeatures \
-            -XX:+FlightRecorder \
-            -Djava.rmi.server.hostname=172.16.103.137"
+           "
 
 
 if [ ! -d "logs" ]; then

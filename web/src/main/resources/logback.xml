@@ -23,7 +23,7 @@
               class="com.ymatou.errorreporter.logbackappender.HttpPostErrorAppender">
         <!-- http post target url -->
         <param name="targetUrl" value="http://alarm.ymatou.com/Alarm/SaveSingle"/>
-        <param name="enableCat" value="false"></param>
+        <param name="enableCat" value="true"></param>
         <!-- your application id -->
         <param name="appId" value="${appId}"/>
     </appender>

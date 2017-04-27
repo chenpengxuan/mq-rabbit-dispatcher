@@ -32,24 +32,24 @@ public class PerformanceConfig {
     @Bean(name = "performanceMonitorAdvice")
     public PerformanceMonitorAdvice performanceMonitorAdvice() {
         PerformanceMonitorAdvice performanceMonitorAdvice = new PerformanceMonitorAdvice();
-        performanceMonitorAdvice.setAppId("dispatcher.rmq.iapi.ymatou.com");
+        performanceMonitorAdvice.setAppId("dispatcher-rmq.iapi.ymatou.com");
         performanceMonitorAdvice.setServerUrl(performanceServerUrl);
-        performanceMonitorAdvice.setReportToCat(false);
+        performanceMonitorAdvice.setReportToCat(true);
         return performanceMonitorAdvice;
     }
 
 
-//    @Bean(name = "performancePointcut")
-//    public AspectJExpressionPointcut aspectJExpressionPointcut() {
-//        AspectJExpressionPointcut aspectJExpressionPointcut = new AspectJExpressionPointcut();
-//
-//        aspectJExpressionPointcut.setExpression(
-//                "execution(* com.ymatou.mq.infrastructure.repository.*Repository.*(..))"
-//                        + "|| execution(* com.ymatou.mq.rabbit.dispatcher.service..*.*(..))"
-//        );
-//
-//        return aspectJExpressionPointcut;
-//    }
+    @Bean(name = "performancePointcut")
+    public AspectJExpressionPointcut aspectJExpressionPointcut() {
+        AspectJExpressionPointcut aspectJExpressionPointcut = new AspectJExpressionPointcut();
+
+        aspectJExpressionPointcut.setExpression(
+                "execution(* com.ymatou.mq.infrastructure.repository.*Repository.*(..))"
+                        + "|| execution(* com.ymatou.mq.rabbit.dispatcher.service..*.*(..))"
+        );
+
+        return aspectJExpressionPointcut;
+    }
 
 
     /**
@@ -61,9 +61,9 @@ public class PerformanceConfig {
      *
      * @return
      */
-//    @Bean
-//    public Advisor performanceMonitorAdvisor() {
-//        return new DefaultPointcutAdvisor(aspectJExpressionPointcut(), performanceMonitorAdvice());
-//    }
+    @Bean
+    public Advisor performanceMonitorAdvisor() {
+        return new DefaultPointcutAdvisor(aspectJExpressionPointcut(), performanceMonitorAdvice());
+    }
 
 }
