@@ -49,13 +49,5 @@
     <dubbo:protocol name="rest" server="tomcat" port="${server.port}"
                     extension="com.ymatou.mq.rabbit.dispatcher.util.JacksonConfig"/>
 
-    <bean id="httpPostErrorConsumer" class="com.ymatou.errorreporter.api.HttpPostErrorConsumer">
-        <constructor-arg value="${errorreport.url}"></constructor-arg>
-    </bean>
-
-    <bean id="bufferErrorReporter" class="com.ymatou.errorreporter.api.BufferedErrorReporter">
-        <property name="errorConsumer" ref="httpPostErrorConsumer"></property>
-    </bean>
-
 
 </beans>

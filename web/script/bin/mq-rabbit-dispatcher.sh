@@ -8,9 +8,9 @@ MAIN_CLASS="com.ymatou.mq.rabbit.dispatcher.starter.Application"
 CLASS_PATH="lib/*:conf"
 JAVA_OPTS=" -server \
             -Ddisconf.env=${DISCONF_ENV}
-            -Xms4096m -Xmx4096m \
+            -Xms1024m -Xmx1024m \
             -XX:MaxMetaspaceSize=512m \
-            -Xmn2000M \
+            -Xmn500M \
             -XX:+UseConcMarkSweepGC -XX:+CMSParallelRemarkEnabled \
             -XX:+UseCMSInitiatingOccupancyOnly -XX:CMSInitiatingOccupancyFraction=75 \
             -XX:+ScavengeBeforeFullGC -XX:+CMSScavengeBeforeRemark \
@@ -18,13 +18,7 @@ JAVA_OPTS=" -server \
             -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=10 -XX:GCLogFileSize=100M \
             -Dsun.net.inetaddr.ttl=60 \
             -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/usr/local/log/${APP_NAME}/heapdump.hprof \
-            -Dcom.sun.management.jmxremote=true \
-            -Dcom.sun.management.jmxremote.port=7091 \
-            -Dcom.sun.management.jmxremote.authenticate=false \
-            -Dcom.sun.management.jmxremote.ssl=false \
-            -XX:+UnlockCommercialFeatures \
-            -XX:+FlightRecorder \
-            -Djava.rmi.server.hostname=172.16.103.137"
+           "
 
 
 if [ ! -d "logs" ]; then
