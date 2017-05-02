@@ -51,12 +51,6 @@ public class WarmUpResourceImpl implements WarmUpResource {
     @Path("/{version:(?i:version)}")
     @Produces({MediaType.TEXT_PLAIN})
     public String version() {
-        try {
-            return new String(Files.readAllBytes(
-                    Paths.get(Utils.class.getResource("/version.txt").toURI())), Charset.forName("UTF-8"));
-        } catch (Exception e) {
-            LOGGER.error("Failed to read version. {}", e.getMessage(), e);
-            return "Failed to read version:" + e.getMessage();
-        }
+        return Utils.readVersion();
     }
 }

@@ -9,6 +9,9 @@ package com.ymatou.mq.rabbit.dispatcher.util;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
+import org.springframework.util.StreamUtils;
 
 import java.net.InetAddress;
 import java.net.NetworkInterface;
@@ -77,10 +80,10 @@ public class Utils {
 
     public static String readVersion() {
         try {
-            return new String(Files.readAllBytes(
-                    Paths.get(Utils.class.getResource("/version.txt").toURI())), Charset.forName("UTF-8"));
+            Resource resource = new ClassPathResource("version.txt");
+            return StreamUtils.copyToString(resource.getInputStream(), Charset.forName("UTF-8"));
         } catch (Exception e) {
-            LOGGER.error("Failed to read version. {}", e.getMessage(), e);
+            LOGGER.error("Failed to read version", e);
             return "Failed to read version:" + e.getMessage();
         }
     }
