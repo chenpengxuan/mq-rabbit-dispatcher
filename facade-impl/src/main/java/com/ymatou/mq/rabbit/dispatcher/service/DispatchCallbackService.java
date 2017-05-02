@@ -7,6 +7,7 @@ import com.ymatou.mq.infrastructure.service.AsyncHttpInvokeService;
 import com.ymatou.mq.infrastructure.service.HttpInvokeResultService;
 import com.ymatou.mq.infrastructure.service.MessageConfigService;
 import com.ymatou.mq.infrastructure.service.MessageService;
+import com.ymatou.mq.infrastructure.support.ErrorReportClient;
 import com.ymatou.mq.infrastructure.support.enums.CallbackFromEnum;
 import com.ymatou.mq.infrastructure.support.enums.CompensateFromEnum;
 import com.ymatou.mq.infrastructure.support.enums.CompensateStatusEnum;
@@ -44,6 +45,9 @@ public class DispatchCallbackService implements HttpInvokeResultService {
     @Autowired
     private ActionFileQueueService actionFileQueueService;
 
+    @Autowired
+    private ErrorReportClient errorReportClient;
+
     @PostConstruct
     public void init(){
         //处理回调成功事件监听
@@ -69,7 +73,6 @@ public class DispatchCallbackService implements HttpInvokeResultService {
             logger.warn("callback config appId:{},queueCode:{},callbackKey:{} abandon queue.",callbackMessage.getAppId(),callbackMessage.getQueueCode(),callbackMessage.getCallbackKey());
             return;
         }
-        logger.info("callback url:{},message:{}.",callbackConfig.getUrl(),callbackMessage);
 
         if(callbackConfig.isDispatchEnable()){
             doInvokeOne(callbackMessage,callbackConfig,null);
@@ -101,6 +104,8 @@ public class DispatchCallbackService implements HttpInvokeResultService {
     public void onInvokeSuccess(CallbackMessage callbackMessage, CallbackConfig callbackConfig){
         Action action = buildAction(ActionConstants.ACTION_TYPE_INVOKE_SUCCESS,callbackMessage);
         actionFileQueueService.saveActionToFileDb(action);
+
+        logger.info("callback success,callbackKey:{},url:{},req:{},resp:{}.", callbackConfig.getCallbackKey(), callbackConfig.getUrl(), callbackMessage.getBody(), callbackMessage.getResponse());
     }
 
     /**
@@ -111,6 +116,9 @@ public class DispatchCallbackService implements HttpInvokeResultService {
     public void onInvokeFail(CallbackMessage callbackMessage, CallbackConfig callbackConfig){
         Action action = buildAction(ActionConstants.ACTION_TYPE_INVOKE_FAIL,callbackMessage);
         actionFileQueueService.saveActionToFileDb(action);
+
+        logger.error("callback fail,callbackKey:{},url:{},req:{},resp:{}.", callbackConfig.getCallbackKey(), callbackConfig.getUrl(), callbackMessage.getBody(), callbackMessage.getResponse());
+        errorReportClient.sendErrorReport(callbackMessage,callbackConfig);
 
         //秒补 最多重试3次
         if(callbackConfig.getSecondCompensateSpan() > 0 && callbackMessage.getSecondCompensateNums() < 3){

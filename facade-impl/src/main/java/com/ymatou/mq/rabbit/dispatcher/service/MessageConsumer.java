@@ -81,12 +81,6 @@ public class MessageConsumer implements Consumer{
         channel = channelWrapper.getChannel();
         channel.basicQos(1);
 
-        channel.addShutdownListener(new ShutdownListener() {
-            @Override
-            public void shutdownCompleted(ShutdownSignalException cause) {
-                logger.error("One rabbitmq channel shutdownCompleted ", cause);
-            }
-        });
         channel.basicConsume(callbackKey,false,this);
     }
 
