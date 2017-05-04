@@ -70,7 +70,7 @@ public class ConfigReloadService implements ConfigReloadListener {
                         for(String cluster:clusters){
                             String messageConsumerId = String.format("%s_%s",callbackConfig.getCallbackKey(),cluster);
                             if(messageConsumerMap.get(messageConsumerId) == null){
-                                logger.info("start message consumer callbackKey:{},cluster:{}",callbackConfig.getCallbackKey(),cluster);
+                                logger.info("start message consumer {}",messageConsumerId);
                                 messageConsumerManager.startConsumer(appConfig.getAppId(),queueConfig.getCode(),callbackConfig.getCallbackKey(),cluster);
                             }
                         }
@@ -79,7 +79,7 @@ public class ConfigReloadService implements ConfigReloadListener {
                         for(String cluster:clusters){
                             String messageConsumerId = String.format("%s_%s",callbackConfig.getCallbackKey(),cluster);
                             if(messageConsumerMap.containsKey(messageConsumerId)){
-                                logger.info("release message consumer {}",messageConsumerId);
+                                logger.info("stop message consumer {}",messageConsumerId);
                                 messageConsumerManager.stopConsumer(callbackConfig.getCallbackKey(),cluster);
                             }
                         }
