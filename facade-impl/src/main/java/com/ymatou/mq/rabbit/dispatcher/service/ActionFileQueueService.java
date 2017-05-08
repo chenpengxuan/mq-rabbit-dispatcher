@@ -84,14 +84,15 @@ public class ActionFileQueueService implements Function<Pair<String, String>, Bo
      */
     @Override
     public Boolean apply(Pair<String, String> pair) {
+        Action action = null;
         try {
             //获取指令
-            Action action = Action.fromJson(pair.getValue());
+             action = Action.fromJson(pair.getValue());
             logger.info("consume action from fileDb,action:{}.",action);
             //执行指令操作
             processAction(action);
         } catch (Exception e) {
-            logger.error("actionListener execute error.",e);
+            logger.error("consume action from fileDb error,action:{}.",action,e);
             return false;
         }
         return true;
@@ -136,11 +137,12 @@ public class ActionFileQueueService implements Function<Pair<String, String>, Bo
         logger.error("key:{},value:{} can not save to filedb ", key, value,
                 throwable.isPresent() ? throwable.get() : "");
         //若写文件队列出错，则直接执行操作
+        Action action = null;
         try {
-            Action action = Action.fromJson(value);
+            action = Action.fromJson(value);
             processAction(action);
         } catch (Exception e) {
-            logger.error("handleException,execute action error.",e);
+            logger.error("handleException,execute action:{} error.",action,e);
         }
     }
 

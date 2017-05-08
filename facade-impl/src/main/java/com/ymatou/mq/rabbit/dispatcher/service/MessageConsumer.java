@@ -11,6 +11,7 @@ import com.ymatou.mq.rabbit.RabbitChannelFactory;
 import com.ymatou.mq.rabbit.config.RabbitConfig;
 import com.ymatou.mq.rabbit.support.ChannelWrapper;
 import org.apache.commons.lang.SerializationUtils;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -79,7 +80,11 @@ public class MessageConsumer implements Consumer{
         ChannelWrapper channelWrapper = RabbitChannelFactory.createChannelWrapper(cluster,rabbitConfig);
         this.channelWrapper = channelWrapper;
         channel = channelWrapper.getChannel();
-        channel.basicQos(1);
+        if(StringUtils.isNotBlank(rabbitConfig.getBasicQos())){
+            channel.basicQos(Integer.parseInt(rabbitConfig.getBasicQos()));
+        }else{
+            channel.basicQos(1);
+        }
 
         channel.basicConsume(callbackKey,false,this);
     }

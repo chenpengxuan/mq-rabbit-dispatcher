@@ -8,6 +8,7 @@ import com.ymatou.mq.rabbit.config.RabbitConfig;
 import com.ymatou.mq.rabbit.dispatcher.config.DispatchConfig;
 
 import com.ymatou.mq.rabbit.support.RabbitConstants;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,6 +49,10 @@ public class MessageConsumerManager {
      */
     @PostConstruct
     public void startAll(){
+        if(StringUtils.isNotEmpty(dispatchConfig.getBasicQos())){
+            rabbitConfig.setBasicQos(dispatchConfig.getBasicQos());
+        }
+
         //启动消费监听
         String groupId = dispatchConfig.getGroupId();
         logger.debug("current group id:{}.",groupId);

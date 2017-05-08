@@ -17,6 +17,8 @@ public class DispatchConfig {
 
     private String groupId;
 
+    private String basicQos;
+
     /**
      * @return the groupId
      */
@@ -32,6 +34,14 @@ public class DispatchConfig {
         this.groupId = groupId;
     }
 
+    @DisconfFileItem(name = "basic.qos")
+    public String getBasicQos() {
+        return basicQos;
+    }
+
+    public void setBasicQos(String basicQos) {
+        this.basicQos = basicQos;
+    }
 
     public boolean isMatch(String dispatchGroup) {
         if (StringUtils.isNotBlank(dispatchGroup) && dispatchGroup.contains(groupId)) {

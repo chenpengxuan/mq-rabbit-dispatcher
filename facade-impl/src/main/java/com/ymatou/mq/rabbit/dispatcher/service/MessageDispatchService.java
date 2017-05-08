@@ -72,7 +72,7 @@ public class MessageDispatchService{
             messageService.saveMessage(message);
             saveMsgResult = true;
         } catch (Exception e) {
-            logger.error("save message error", e);
+            logger.error("save message:{} to mongo error",message,e);
         }
 
         //分发回调
@@ -89,7 +89,7 @@ public class MessageDispatchService{
             }
             dispatchResult = true;
         } catch (Exception e) {
-            logger.error("dispatch message error", e);
+            logger.error("dispatch message:{} error", message,e);
         }
 
         //若写消息或分发有一个成功，则返回true

@@ -105,7 +105,8 @@ public class DispatchCallbackService implements HttpInvokeResultService {
         Action action = buildAction(ActionConstants.ACTION_TYPE_INVOKE_SUCCESS,callbackMessage);
         actionFileQueueService.saveActionToFileDb(action);
 
-        logger.info("callback success,callbackKey:{},url:{},req:{},resp:{}.", callbackConfig.getCallbackKey(), callbackConfig.getUrl(), callbackMessage.getBody(), callbackMessage.getResponse());
+        logger.info("callback success callbackKey:{},resp:{},url:{},bizId:{}.", callbackConfig.getCallbackKey(),
+                callbackMessage.getResponse(), callbackConfig.getUrl(), callbackMessage.getBizId());
     }
 
     /**
@@ -117,7 +118,8 @@ public class DispatchCallbackService implements HttpInvokeResultService {
         Action action = buildAction(ActionConstants.ACTION_TYPE_INVOKE_FAIL,callbackMessage);
         actionFileQueueService.saveActionToFileDb(action);
 
-        logger.error("callback fail,callbackKey:{},url:{},req:{},resp:{}.", callbackConfig.getCallbackKey(), callbackConfig.getUrl(), callbackMessage.getBody(), callbackMessage.getResponse());
+        logger.error("mq fail: callbackKey:{},resp:{},url:{},bizId:{},req:{}.", callbackConfig.getCallbackKey(),
+                callbackMessage.getResponse(), callbackConfig.getUrl(), callbackMessage.getBizId(), callbackMessage.getBody());
         errorReportClient.sendErrorReport(callbackMessage,callbackConfig);
 
         //秒补 最多重试3次

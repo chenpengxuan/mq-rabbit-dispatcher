@@ -86,7 +86,7 @@ public class MessageFileQueueService implements Function<Pair<String, String>, B
     @Override
     public Boolean apply(Pair<String, String> pair) {
         Message message = Message.fromJson(pair.getValue());
-        logger.info("consume  message from fileDb,message:{}.",message);
+        logger.info("consume message from fileDb,message:{}.",message);
         //保存消息到mongo并直接分发消息
         return messageDispatchService.saveAndDispatchMessage(message);
     }
