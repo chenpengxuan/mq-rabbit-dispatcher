@@ -1,2 +1,3 @@
 2017-04-26 init
 2017-05-02 update readversion
+2017-05-08 update message log/add QOS disf config
