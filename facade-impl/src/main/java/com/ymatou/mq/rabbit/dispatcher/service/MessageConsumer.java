@@ -95,7 +95,7 @@ public class MessageConsumer implements Consumer{
     public void stop(){
         logger.info("close message consumer callbackKey:{},cluster:{}",callbackKey,cluster);
         if(channel != null && channel.isOpen()){
-            RabbitChannelFactory.releaseChannelWrapper(cluster,channelWrapper);
+            RabbitChannelFactory.releaseChannelWrapper(cluster,channelWrapper,false);
         }
     }
 
